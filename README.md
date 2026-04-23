@@ -1,19 +1,11 @@
-<p align="center">
-<img style="align:center;" src="public/apple-touch-icon.png" alt="Skrivla Logo" height="80" />
-</p>
+# Skrivla
 
-<h1 align="center">Skrivla</h1>
-<h3 align="center">Share a link and write together in real time. No account needed.</h3>
-<p align="center">
 <a href="https://luvabase.com/?url=https://github.com/simonbengtsson/skrivla"><img src="https://luvabase.com/deploy_small.svg" alt="Deploy to Luvabase"/></a>
 <a href="https://deploy.workers.cloudflare.com/?url=https://github.com/simonbengtsson/skrivla"><img src="https://deploy.workers.cloudflare.com/button" alt="Deploy to Cloudflare"/></a>
-</p>
 
-<p align="center">
-🌎 Just share a link and instantly write together<br>
+🌎 Just share a link and instantly write together. No account needed.<br>
 🎨 Rich text editing and Markdown shortcuts.<br>
 ❤️ Free forever, open source, self-hostable on Luvabase and Cloudflare.<br>
-</p>
 
 ![Screenshot of Skrivla](/public/screenshot.png)
 
