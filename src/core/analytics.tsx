@@ -42,5 +42,4 @@ export function identifyUser(user: LuvabaseMember) {
   mixpanel.people.set({
     $name: user.name,
   })
-  console.log("identifyUser", user)
 }
