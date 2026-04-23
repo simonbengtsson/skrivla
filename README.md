@@ -29,9 +29,11 @@ You can also [Deploy to Cloudflare](https://deploy.workers.cloudflare.com/?url=h
 
 ## Stack
 
-- Cloudflare Durable Objects and Worker
+Skrivla is built as a SPA with light server api and persistance layer on Cloudflare Durable Objects.
+
+- Server: Cloudflare Durable Objects and Worker
+- Client: Shadcn, tanstack router, vite, tailwind
 - Rich text editing with [Tiptap](http://tiptap.dev)
-- Front-end: Shadcn, tanstack router, vite, tailwind
 
 ## Contributions
 
