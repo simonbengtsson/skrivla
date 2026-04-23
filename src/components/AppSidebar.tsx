@@ -7,6 +7,7 @@ import { DEV_AUTH_ANONYMOUS_VALUE, DEV_AUTH_COOKIE_NAME } from "@/core/shared"
 import type { Page } from "@/core/types"
 import { useCurrentUserState } from "@/core/UserContext"
 import { cn } from "@/lib/utils"
+import { getEnvironment } from "@/luvabase"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useRouter, useRouterState } from "@tanstack/react-router"
 import {
@@ -294,57 +295,59 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           ) : null}
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton>
-                  <UserIcon />
-                  <span className="truncate text-left tracking-normal">
-                    {user?.name || "Anonymous"}
-                  </span>
-                  <LucideChevronDown className="ml-auto" />
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="center">
-                {isDev ? (
-                  <>
-                    <DropdownMenuLabel>Dev User</DropdownMenuLabel>
-                    <DropdownMenuRadioGroup
-                      value={selectedDevUserId}
-                      onValueChange={handleDevUserChange}
-                    >
-                      <DropdownMenuRadioItem value={DEV_AUTH_ANONYMOUS_VALUE}>
-                        Anonymous
-                      </DropdownMenuRadioItem>
-                      {devMembers.map((member) => (
-                        <DropdownMenuRadioItem key={member.id} value={member.id}>
-                          {member.name}
+          {getEnvironment() === "cloudflare" ? null : (
+            <SidebarMenuItem>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton>
+                    <UserIcon />
+                    <span className="truncate text-left tracking-normal">
+                      {user?.name || "Anonymous"}
+                    </span>
+                    <LucideChevronDown className="ml-auto" />
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="center">
+                  {isDev ? (
+                    <>
+                      <DropdownMenuLabel>Dev User</DropdownMenuLabel>
+                      <DropdownMenuRadioGroup
+                        value={selectedDevUserId}
+                        onValueChange={handleDevUserChange}
+                      >
+                        <DropdownMenuRadioItem value={DEV_AUTH_ANONYMOUS_VALUE}>
+                          Anonymous
                         </DropdownMenuRadioItem>
-                      ))}
-                    </DropdownMenuRadioGroup>
-                    {user ? <DropdownMenuSeparator /> : null}
-                  </>
-                ) : (
-                  <></>
-                )}
-                {user ? (
-                  <DropdownMenuItem asChild>
-                    <a href={podAdminUrl} onClick={() => setOpenMobile(false)}>
-                      <WrenchIcon />
-                      <span>Admin</span>
-                    </a>
-                  </DropdownMenuItem>
-                ) : null}
-                {!isDev && user ? <DropdownMenuSeparator /> : null}
-                {!isDev ? (
-                  <DropdownMenuItem onSelect={() => void handleLogout()}>
-                    <LucideLogOut />
-                    <span>Log Out</span>
-                  </DropdownMenuItem>
-                ) : null}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
+                        {devMembers.map((member) => (
+                          <DropdownMenuRadioItem key={member.id} value={member.id}>
+                            {member.name}
+                          </DropdownMenuRadioItem>
+                        ))}
+                      </DropdownMenuRadioGroup>
+                      {user ? <DropdownMenuSeparator /> : null}
+                    </>
+                  ) : (
+                    <></>
+                  )}
+                  {user ? (
+                    <DropdownMenuItem asChild>
+                      <a href={podAdminUrl} onClick={() => setOpenMobile(false)}>
+                        <WrenchIcon />
+                        <span>Admin</span>
+                      </a>
+                    </DropdownMenuItem>
+                  ) : null}
+                  {!isDev && user ? <DropdownMenuSeparator /> : null}
+                  {!isDev ? (
+                    <DropdownMenuItem onSelect={() => void handleLogout()}>
+                      <LucideLogOut />
+                      <span>Log Out</span>
+                    </DropdownMenuItem>
+                  ) : null}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </SidebarMenuItem>
+          )}
           <SidebarMenuItem>
             <Dialog>
               <DialogTrigger asChild>
