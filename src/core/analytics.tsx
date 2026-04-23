@@ -19,7 +19,6 @@ export function MixpanelInit() {
 
     mixpanel.init(MIXPANEL_TOKEN, { autotrack: true, api_host: "https://api-eu.mixpanel.com" })
     initialized = true
-    console.log("Mixpanel initialized")
   }, [])
 
   return null

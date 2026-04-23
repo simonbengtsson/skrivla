@@ -10,9 +10,7 @@ export const queryKeys = {
 }
 
 export async function getCurrentUser() {
-  console.log("Getting current user...")
   const response = await jsonFetch<LuvabaseMember | null>("/api/current-user")
-  console.log("Current user", response)
   return response
 }
 
