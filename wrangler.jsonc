@@ -1,0 +1,44 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "skrivla",
+  "compatibility_date": "2026-04-20",
+  "main": "src/worker.ts",
+  "assets": {
+    "directory": "public",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": [
+      "/api/*",
+      "/luvabase/*"
+    ],
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "MainDO",
+      ],
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": [
+        "WorkspaceDO",
+        "PageDO",
+      ],
+      "deleted_classes": [
+        "MainDO",
+      ],
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "WORKSPACE_DO",
+        "class_name": "WorkspaceDO",
+      },
+      {
+        "name": "PAGE_DO",
+        "class_name": "PageDO",
+      },
+    ],
+  },
+}

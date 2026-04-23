@@ -1,0 +1,44 @@
+<p align="center">
+<img style="align:center;" src="public/apple-touch-icon.png" alt="Skrivla Logo" height="80" />
+</p>
+
+<h1 align="center">Skrivla</h1>
+<h3 align="center">Share a link and write together in real time. No account needed.</h3>
+<p align="center">
+<a href="https://luvabase.com/?url=https://github.com/simonbengtsson/skrivla"><img src="https://luvabase.com/deploy_small.svg" alt="Deploy to Luvabase"/></a>
+<a href="https://deploy.workers.cloudflare.com/?url=https://github.com/simonbengtsson/skrivla"><img src="https://deploy.workers.cloudflare.com/button" alt="Deploy to Cloudflare"/></a>
+</p>
+
+<p align="center">
+🌎 Just share a link and instantly write together<br>
+🎨 Rich text editing and Markdown shortcuts.<br>
+❤️ Free forever, open source, self-hostable on Luvabase and Cloudflare.<br>
+</p>
+
+![Screenshot of Skrivla](/public/screenshot.png)
+
+## What is Skrivla?
+
+Skrivla is your self-hostable collaborative editor. Think Google Docs, but specically built for quick brainstorming sessions, meeting notes etc. Just share a link to a page and anyone can collaborate on it.
+
+## Getting started
+
+The easiest way to use Skrivla is to [install it on Luvabase](https://luvabase.com/?url=https://github.com/simonbengtsson/skrivla). On Luvabase authentication is managed for you.
+
+You can also [Deploy to Cloudflare](https://deploy.workers.cloudflare.com/?url=https://github.com/simonbengtsson/skrivla) and protect your Skrivla instance with [Cloudflare Access](https://developers.cloudflare.com/cloudflare-for-platforms/cloudflare-for-saas/security/secure-with-access).
+
+## Stack
+
+- Cloudflare Durable Objects and Worker
+- Rich text editing with [Tiptap](http://tiptap.dev)
+- Front-end: Shadcn, tanstack router, vite, tailwind
+
+## Contributions
+
+Very much welcome! The goal is to keep editor minimal, but below are some examples of what would be in scope:
+
+- Attachments
+- Agent integration in editor (with Workers AI)
+- MCP server for finding and reading documents
+- A small desktop sync application to sync pages to a local folder for easier access by local agents
+- Page pinning or otherways to improve sidebar for many pages
