@@ -93,7 +93,7 @@ export function AppSidebar() {
     queryFn: listPages,
     enabled: user != null,
   })
-  const membersQuery = useQuery({
+  const devMembersQuery = useQuery({
     queryKey: queryKeys.members,
     queryFn: getMembers,
     enabled: isDev,
@@ -120,7 +120,7 @@ export function AppSidebar() {
   })
 
   const pages = pagesQuery.data ?? []
-  const members = membersQuery.data ?? []
+  const devMembers = devMembersQuery.data ?? []
   const selectedDevUserId = user?.id ?? DEV_AUTH_ANONYMOUS_VALUE
 
   useEffect(() => {
@@ -316,7 +316,7 @@ export function AppSidebar() {
                       <DropdownMenuRadioItem value={DEV_AUTH_ANONYMOUS_VALUE}>
                         Anonymous
                       </DropdownMenuRadioItem>
-                      {members.map((member) => (
+                      {devMembers.map((member) => (
                         <DropdownMenuRadioItem key={member.id} value={member.id}>
                           {member.name}
                         </DropdownMenuRadioItem>

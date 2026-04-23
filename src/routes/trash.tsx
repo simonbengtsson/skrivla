@@ -81,6 +81,7 @@ function TrashPage() {
             </div>
           ) : (
             <TrashTable
+              canRestore={user != null}
               pages={trashPages}
               restoringPageId={restorePageMutation.isPending ? (restorePageMutation.variables ?? null) : null}
               onRestorePage={(pageId) => {
@@ -95,6 +96,7 @@ function TrashPage() {
 }
 
 function TrashTable(props: {
+  canRestore: boolean
   pages: Page[]
   restoringPageId: string | null
   onRestorePage: (pageId: string) => void
@@ -123,17 +125,19 @@ function TrashTable(props: {
                 <TableCell>{formatAbsoluteDate(page.createdAt)}</TableCell>
                 <TableCell>{page.deletedAt ? formatAbsoluteDate(page.deletedAt) : "—"}</TableCell>
                 <TableCell>
-                  <Button
-                    size="icon-sm"
-                    variant="outline"
-                    aria-label="Restore page"
-                    disabled={props.restoringPageId === page.id}
-                    onClick={() => {
-                      props.onRestorePage(page.id)
-                    }}
-                  >
-                    <HistoryIcon />
-                  </Button>
+                  {props.canRestore ? (
+                    <Button
+                      size="icon-sm"
+                      variant="outline"
+                      aria-label="Restore page"
+                      disabled={props.restoringPageId === page.id}
+                      onClick={() => {
+                        props.onRestorePage(page.id)
+                      }}
+                    >
+                      <HistoryIcon />
+                    </Button>
+                  ) : null}
                 </TableCell>
               </TableRow>
             )

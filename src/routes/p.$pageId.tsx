@@ -93,8 +93,8 @@ function PageInstancePage() {
       return
     }
 
-    setInitialFocusTarget(user && !page.name?.trim() ? "title" : "editor")
-  }, [initialFocusTarget, isAuthPending, page, user])
+    setInitialFocusTarget(!page.name?.trim() ? "title" : "editor")
+  }, [initialFocusTarget, isAuthPending, page])
 
   useEffect(() => {
     return () => {
@@ -128,7 +128,7 @@ function PageInstancePage() {
             <div className="md:px-[54px] pb-4">
               {showTitleSkeleton ? (
                 <Skeleton className="mt-1 h-8 w-full md:mt-10" />
-              ) : user ? (
+              ) : (
                 <input
                   id="page-title-input"
                   autoFocus={hasCollaborationSynced && shouldFocusTitle}
@@ -174,10 +174,6 @@ function PageInstancePage() {
                     }, 300)
                   }}
                 />
-              ) : (
-                <h1 className="page-title-input text-3xl md:text-4xl md:pt-8 font-bold text-gray-800 dark:text-gray-200">
-                  {page.name || "Untitled"}
-                </h1>
               )}
             </div>
             <div className="relative md:px-[54px]">
@@ -302,7 +298,7 @@ function PageInstanceHeader(props: {
     }
   }
 
-  function renderActions(currentPage: Page, currentUser: LuvabaseMember | null) {
+  function renderActions(currentUser: LuvabaseMember | null) {
     return (
       <div className="flex items-center gap-2">
         <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
@@ -374,7 +370,7 @@ function PageInstanceHeader(props: {
             {copyMarkdownState === "copied" ? <LucideCheck /> : <LucideCopy />}
           </Button>
         </HeaderButtonTooltip>
-        {currentUser && currentPage.creatorId === currentUser.id && (
+        {currentUser && (
           <HeaderButtonTooltip content="Delete page">
             <Button
               size="icon-sm"
@@ -407,7 +403,7 @@ function PageInstanceHeader(props: {
           <Skeleton className="h-9 w-9 rounded-none" />
         </div>
       ) : page ? (
-        <div className="ml-auto">{renderActions(page, user)}</div>
+        <div className="ml-auto">{renderActions(user)}</div>
       ) : null}
     </header>
   )

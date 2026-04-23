@@ -12,7 +12,7 @@ import { PAGE_DOC_FIELD, pageSchema } from "./core/pageDocument"
 import { pages } from "./core/schema"
 import type { PageContent } from "./core/types"
 import { generateShortId } from "./core/utils"
-import { getCurrentUser, getMembers } from "./luvabase"
+import { getCurrentUser, getDevMembers, isAuthenticated } from "./luvabase"
 import { migrations } from "./server/migrations"
 
 const WORKSPACE_DO_NAME = "workspace"
@@ -30,13 +30,13 @@ export default {
   async fetch(request: Request, env: Cloudflare.Env) {
     const url = new URL(request.url)
 
-    if (url.pathname === "/api/members") {
-      const members = await getMembers(request)
+    if (url.pathname === "/api/dev-members") {
+      const members = await getDevMembers()
       return Response.json(members)
     }
 
     if (url.pathname === "/api/current-user") {
-      const currentUser = await getCurrentUser(request)
+      const currentUser = getCurrentUser(request)
       return Response.json(currentUser)
     }
 
@@ -123,22 +123,21 @@ export class WorkspaceDO extends DurableObject {
     }
 
     if (pathname === "/api/pages/trash" && request.method === "GET") {
-      const user = await getCurrentUser(request)
-      if (!user) {
+      if (!isAuthenticated(request)) {
         return new Response("Unauthorized", { status: 401 })
       }
 
       const deletedPages = await this.db
         .select()
         .from(pages)
-        .where(and(eq(pages.creatorId, user.id), isNotNull(pages.deletedAt)))
+        .where(isNotNull(pages.deletedAt))
         .orderBy(desc(pages.deletedAt), desc(pages.createdAt))
 
       return Response.json(deletedPages)
     }
 
     if (pathname === "/api/pages" && request.method === "POST") {
-      const user = await getCurrentUser(request)
+      const user = getCurrentUser(request)
       if (!user) {
         return new Response("Unauthorized", { status: 401 })
       }
@@ -161,13 +160,12 @@ export class WorkspaceDO extends DurableObject {
 
     const restoreMatch = pathname.match(/^\/api\/pages\/([^/]+)\/restore$/)
     if (restoreMatch && request.method === "POST") {
-      const user = await getCurrentUser(request)
-      if (!user) {
+      if (!isAuthenticated(request)) {
         return new Response("Unauthorized", { status: 401 })
       }
 
       const pageId = decodeURIComponent(restoreMatch[1]!)
-      const deletedPage = await this.getOwnedPage(pageId, user.id, {
+      const deletedPage = await this.getPageById(pageId, {
         includeDeleted: true,
       })
 
@@ -183,9 +181,9 @@ export class WorkspaceDO extends DurableObject {
           updatedAt: restoredAt,
           deletedAt: null,
         })
-        .where(and(eq(pages.id, pageId), eq(pages.creatorId, user.id), isNotNull(pages.deletedAt)))
+        .where(and(eq(pages.id, pageId), isNotNull(pages.deletedAt)))
 
-      const restoredPage = await this.getOwnedPage(pageId, user.id)
+      const restoredPage = await this.getPageById(pageId)
       return Response.json(restoredPage)
     }
 
@@ -202,13 +200,7 @@ export class WorkspaceDO extends DurableObject {
         return Response.json(page)
       }
 
-      const user = await getCurrentUser(request)
-      if (!user) {
-        return new Response("Unauthorized", { status: 401 })
-      }
-
-      const ownedPage = await this.getOwnedPage(pageId, user.id)
-      if (!ownedPage) {
+      if (!page) {
         return new Response("Not found", { status: 404 })
       }
 
@@ -219,16 +211,20 @@ export class WorkspaceDO extends DurableObject {
         await this.db
           .update(pages)
           .set({
-            name: body.name ?? ownedPage.name,
+            name: body.name ?? page.name,
             updatedAt: now,
           })
-          .where(and(eq(pages.id, pageId), eq(pages.creatorId, user.id)))
+          .where(eq(pages.id, pageId))
 
-        const updatedPage = await this.getOwnedPage(pageId, user.id)
+        const updatedPage = await this.getPageById(pageId)
         return Response.json(updatedPage)
       }
 
       if (request.method === "DELETE") {
+        if (!isAuthenticated(request)) {
+          return new Response("Unauthorized", { status: 401 })
+        }
+
         const deletedAt = new Date().toISOString()
 
         await this.deletePageContent(pageId)
@@ -238,9 +234,9 @@ export class WorkspaceDO extends DurableObject {
             updatedAt: deletedAt,
             deletedAt,
           })
-          .where(and(eq(pages.id, pageId), eq(pages.creatorId, user.id), isNull(pages.deletedAt)))
+          .where(and(eq(pages.id, pageId), isNull(pages.deletedAt)))
 
-        const deletedPage = await this.getOwnedPage(pageId, user.id, {
+        const deletedPage = await this.getPageById(pageId, {
           includeDeleted: true,
         })
 
@@ -249,26 +245,6 @@ export class WorkspaceDO extends DurableObject {
     }
 
     return new Response("Not found", { status: 404 })
-  }
-
-  private async getOwnedPage(
-    pageId: string,
-    userId: string,
-    options: { includeDeleted?: boolean } = {},
-  ) {
-    const filters = [eq(pages.id, pageId), eq(pages.creatorId, userId)]
-
-    if (!options.includeDeleted) {
-      filters.push(isNull(pages.deletedAt))
-    }
-
-    const [page] = await this.db
-      .select()
-      .from(pages)
-      .where(and(...filters))
-      .limit(1)
-
-    return page ?? null
   }
 
   private async touchPage(pageId: string, updatedAt: string) {

@@ -3,6 +3,9 @@
   "name": "skrivla",
   "compatibility_date": "2026-04-20",
   "main": "src/worker.ts",
+  "vars": {
+    "LUVABASE": "no", // Will be overriden to "yes" on luvabase, stay as "no" on cloudflare
+  },
   "assets": {
     "directory": "public",
     "not_found_handling": "single-page-application",

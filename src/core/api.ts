@@ -17,7 +17,7 @@ export async function getCurrentUser() {
 }
 
 export async function getMembers() {
-  return jsonFetch<LuvabaseMember[]>("/api/members")
+  return jsonFetch<LuvabaseMember[]>("/api/dev-members")
 }
 
 export async function listPages() {
