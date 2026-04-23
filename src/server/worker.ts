@@ -8,12 +8,12 @@ import { prosemirrorJSONToYDoc, yXmlFragmentToProseMirrorRootNode } from "y-pros
 import * as awarenessProtocol from "y-protocols/awareness"
 import * as syncProtocol from "y-protocols/sync"
 import * as Y from "yjs"
-import { PAGE_DOC_FIELD, pageSchema } from "./core/pageDocument"
-import { pages } from "./core/schema"
-import type { PageContent } from "./core/types"
-import { generateShortId } from "./core/utils"
-import { getCurrentUser, getDevMembers, isAuthenticated } from "./luvabase"
-import { migrations } from "./server/migrations"
+import { PAGE_DOC_FIELD, pageSchema } from "../core/pageDocument"
+import { pages } from "../core/schema"
+import type { PageContent } from "../core/types"
+import { generateShortId } from "../core/utils"
+import { getCurrentUser, getDevMembers, getEnvironment, isAuthenticated } from "./luvabase"
+import { migrations } from "./migrations"
 
 const WORKSPACE_DO_NAME = "workspace"
 const PAGE_CONTENT_KEY = "content"
@@ -35,9 +35,12 @@ export default {
       return Response.json(members)
     }
 
-    if (url.pathname === "/api/current-user") {
+    if (url.pathname === "/api/session") {
       const currentUser = getCurrentUser(request)
-      return Response.json(currentUser)
+      return Response.json({
+        user: currentUser,
+        environment: getEnvironment(),
+      })
     }
 
     const collaborationMatch = matchPageCollaborationPath(url.pathname)

@@ -1,6 +1,6 @@
 import { env } from "cloudflare:workers"
-import { DEV_AUTH_ANONYMOUS_VALUE, DEV_AUTH_COOKIE_NAME } from "./core/shared"
-import type { LuvabaseMember } from "./core/types"
+import { DEV_AUTH_ANONYMOUS_VALUE, DEV_AUTH_COOKIE_NAME } from "../core/shared"
+import type { LuvabaseMember } from "../core/types"
 
 const DEV_MEMBERS: LuvabaseMember[] = [
   {

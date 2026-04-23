@@ -11,7 +11,7 @@
     "dev": "vite dev",
     "build": "vite build",
     "serve": "vite preview",
-    "deploy": "wrangler deploy",
+    "deploy": "bun run build && wrangler deploy",
     "deploy:luvabase": "luvabase deploy",
     "test": "vitest run"
   },

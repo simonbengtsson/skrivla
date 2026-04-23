@@ -22,7 +22,7 @@ import { deletePage, getPage, queryKeys, updatePage } from "@/core/api"
 import { serializePageMarkdown } from "@/core/pageDocument"
 import { upsertPageByCreatedAtDescending } from "@/core/pageList"
 import type { LuvabaseMember, Page } from "@/core/types"
-import { useCurrentUserState } from "@/core/UserContext"
+import { useSession } from "@/core/UserContext"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, notFound, useRouter } from "@tanstack/react-router"
 import { LucideCheck, LucideCopy, LucideGlobe, LucideTrash } from "lucide-react"
@@ -50,7 +50,8 @@ function RouteComponent() {
 
 function PageInstancePage() {
   const pageId = Route.useParams().pageId
-  const { user, isPending: isAuthPending } = useCurrentUserState()
+  const sessionQuery = useSession()
+  const user = sessionQuery.data?.user || null
   const { session, hasSynced: hasCollaborationSynced } = useCollaborationSession(pageId)
   const queryClient = useQueryClient()
   const saveNameTimeoutRef = useRef<number | null>(null)
@@ -89,12 +90,12 @@ function PageInstancePage() {
   }, [page?.name])
 
   useEffect(() => {
-    if (initialFocusTarget !== null || !page || isAuthPending) {
+    if (initialFocusTarget !== null || !page || sessionQuery.isPending) {
       return
     }
 
     setInitialFocusTarget(!page.name?.trim() ? "title" : "editor")
-  }, [initialFocusTarget, isAuthPending, page])
+  }, [initialFocusTarget, sessionQuery.isPending, page])
 
   useEffect(() => {
     return () => {
@@ -109,8 +110,9 @@ function PageInstancePage() {
   }
 
   const shouldFocusTitle = initialFocusTarget === "title"
-  const showTitleSkeleton = isLoading || isAuthPending || !hasCollaborationSynced
-  const showEditorSkeleton = isLoading || isAuthPending || !hasCollaborationSynced || !session
+  const showTitleSkeleton = isLoading || sessionQuery.isPending || !hasCollaborationSynced
+  const showEditorSkeleton =
+    isLoading || sessionQuery.isPending || !hasCollaborationSynced || !session
 
   return (
     <SidebarInset>
@@ -119,7 +121,7 @@ function PageInstancePage() {
         page={page ?? null}
         session={session}
         hasCollaborationSynced={hasCollaborationSynced}
-        isAuthPending={isAuthPending}
+        isAuthPending={sessionQuery.isPending}
         isLoading={isLoading}
       />
       <div className="flex flex-col container mx-auto max-w-5xl flex-1 p-4">
@@ -208,7 +210,8 @@ function PageInstanceHeader(props: {
   isAuthPending: boolean
   isLoading: boolean
 }) {
-  const { user } = useCurrentUserState()
+  const sessionQuery = useSession()
+  const user = sessionQuery.data?.user || null
   const router = useRouter()
   const queryClient = useQueryClient()
   const page = props.page

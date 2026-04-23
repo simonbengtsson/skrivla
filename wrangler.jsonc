@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "skrivla-wrangler-deploy",
   "compatibility_date": "2026-04-20",
-  "main": "src/worker.ts",
+  "main": "src/server/worker.ts",
   "vars": {
     "LUVABASE": "no", // Will be overriden to "yes" on luvabase, stay as "no" on cloudflare
   },

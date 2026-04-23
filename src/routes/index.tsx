@@ -4,7 +4,7 @@ import { SidebarInset } from "@/components/ui/sidebar"
 import { Skeleton } from "@/components/ui/skeleton"
 import { createPage, queryKeys } from "@/core/api"
 import type { Page } from "@/core/types"
-import { useCurrentUserState } from "@/core/UserContext"
+import { useSession } from "@/core/UserContext"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, useRouter } from "@tanstack/react-router"
 
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/")({
 
 function App() {
   const router = useRouter()
-  const { user, isPending: isAuthPending } = useCurrentUserState()
+  const sessionQuery = useSession()
   const queryClient = useQueryClient()
 
   const createPageMutation = useMutation({
@@ -40,9 +40,9 @@ function App() {
       <Header />
       <main className="container mx-auto flex flex-1 px-4 py-16">
         <div className="flex w-full flex-1 items-center justify-center pb-24">
-          {isAuthPending ? (
+          {sessionQuery.isPending ? (
             <IndexStateSkeleton />
-          ) : !user ? (
+          ) : !sessionQuery.data?.user ? (
             <div className="flex w-full max-w-sm flex-col items-center gap-3 text-center">
               <p className="text-sm text-muted-foreground">Log in to view and create pages.</p>
               <Button asChild>

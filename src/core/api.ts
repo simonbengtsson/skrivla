@@ -9,8 +9,11 @@ export const queryKeys = {
   pageContent: (pageId: string) => ["page-contents", pageId] as const,
 }
 
-export async function getCurrentUser() {
-  const response = await jsonFetch<LuvabaseMember | null>("/api/current-user")
+export async function getSession() {
+  const response = await jsonFetch<{
+    user: LuvabaseMember | null
+    environment: "cloudflare" | "luvabase" | "dev"
+  }>("/api/session")
   return response
 }
 

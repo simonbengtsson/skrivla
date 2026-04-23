@@ -3,42 +3,33 @@
 import { useQuery } from "@tanstack/react-query"
 import { useEffect, useRef } from "react"
 import { identifyUser } from "./analytics"
-import { getCurrentUser, queryKeys } from "./api"
+import { getSession, queryKeys } from "./api"
 
-export function useCurrentUserQuery() {
+export function useSession() {
   return useQuery({
     queryKey: queryKeys.currentUser,
-    queryFn: getCurrentUser,
+    queryFn: async () => {
+      const result = await getSession()
+      return {
+        user: result.user,
+        environment: result.environment,
+      }
+    },
   })
 }
 
-export function useCurrentUserState() {
-  const currentUserQuery = useCurrentUserQuery()
-  const isPending = currentUserQuery.isPending
-  const user = currentUserQuery.data ?? null
-
-  return {
-    user,
-    isPending,
-  }
-}
-
 export function CurrentUserTracker() {
-  const { user } = useCurrentUserState()
+  const sessionQuery = useSession()
   const reportedUserIdRef = useRef<string | null>(null)
 
   useEffect(() => {
-    if (!user || reportedUserIdRef.current === user.id) {
+    if (!sessionQuery.data?.user || reportedUserIdRef.current === sessionQuery.data?.user.id) {
       return
     }
 
-    identifyUser(user)
-    reportedUserIdRef.current = user.id
-  }, [user])
+    identifyUser(sessionQuery.data.user)
+    reportedUserIdRef.current = sessionQuery.data.user.id
+  }, [sessionQuery.data?.user?.id])
 
   return null
-}
-
-export function useCurrentUser() {
-  return useCurrentUserState().user
 }

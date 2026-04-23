@@ -14,7 +14,7 @@ import { listTrashPages, queryKeys, restorePage } from "@/core/api"
 import { formatAbsoluteDate } from "@/core/dateUtils"
 import { upsertPageByCreatedAtDescending } from "@/core/pageList"
 import type { Page } from "@/core/types"
-import { useCurrentUserState } from "@/core/UserContext"
+import { useSession } from "@/core/UserContext"
 import { cn } from "@/lib/utils"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
@@ -25,12 +25,13 @@ export const Route = createFileRoute("/trash")({
 })
 
 function TrashPage() {
-  const { user, isPending: isAuthPending } = useCurrentUserState()
+  const sessionQuery = useSession()
+  const user = sessionQuery.data?.user || null
   const queryClient = useQueryClient()
   const trashPagesQuery = useQuery({
     queryKey: queryKeys.trashPages,
     queryFn: listTrashPages,
-    enabled: user != null,
+    enabled: sessionQuery.data?.user != null,
   })
   const restorePageMutation = useMutation({
     mutationFn: (pageId: string) => restorePage(pageId),
@@ -66,7 +67,7 @@ function TrashPage() {
             </p>
           </div>
 
-          {isAuthPending || isTrashLoading ? (
+          {sessionQuery.isPending || isTrashLoading ? (
             <TrashTableSkeleton />
           ) : !user ? (
             <div className="flex w-full max-w-sm flex-col gap-3 border border-dashed border-border p-5 text-sm text-muted-foreground">
@@ -83,7 +84,9 @@ function TrashPage() {
             <TrashTable
               canRestore={user != null}
               pages={trashPages}
-              restoringPageId={restorePageMutation.isPending ? (restorePageMutation.variables ?? null) : null}
+              restoringPageId={
+                restorePageMutation.isPending ? (restorePageMutation.variables ?? null) : null
+              }
               onRestorePage={(pageId) => {
                 restorePageMutation.mutate(pageId)
               }}

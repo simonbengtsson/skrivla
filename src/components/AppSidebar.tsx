@@ -5,9 +5,8 @@ import { createPage, getMembers, listPages, queryKeys } from "@/core/api"
 import { clearPersistedQueryCache } from "@/core/queryPersistence"
 import { DEV_AUTH_ANONYMOUS_VALUE, DEV_AUTH_COOKIE_NAME } from "@/core/shared"
 import type { Page } from "@/core/types"
-import { useCurrentUserState } from "@/core/UserContext"
+import { useSession } from "@/core/UserContext"
 import { cn } from "@/lib/utils"
-import { getEnvironment } from "@/luvabase"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useRouter, useRouterState } from "@tanstack/react-router"
 import {
@@ -77,7 +76,7 @@ function getPageDisplayName(page: Pick<Page, "name">) {
 
 export function AppSidebar() {
   const { setOpenMobile } = useSidebar()
-  const { user, isPending: isAuthPending } = useCurrentUserState()
+  const sessionQuery = useSession()
   const router = useRouter()
   const queryClient = useQueryClient()
   const [isOpenDialogOpen, setIsOpenDialogOpen] = useState(false)
@@ -92,13 +91,15 @@ export function AppSidebar() {
   const pagesQuery = useQuery({
     queryKey: queryKeys.pages,
     queryFn: listPages,
-    enabled: user != null,
+    enabled: sessionQuery.data?.user != null,
   })
   const devMembersQuery = useQuery({
     queryKey: queryKeys.members,
     queryFn: getMembers,
     enabled: isDev,
   })
+
+  const user = sessionQuery.data?.user || null
 
   const createPageMutation = useMutation({
     mutationFn: () => createPage(),
@@ -182,7 +183,7 @@ export function AppSidebar() {
           <img src="/appicon-only.svg" alt="Skrivla Logo" width={24} height={24} />
           Skrivla
         </h1>
-        {isAuthPending ? (
+        {sessionQuery.isPending ? (
           <Skeleton className="mt-1 h-9 w-full rounded-none" />
         ) : user ? (
           <Button
@@ -199,7 +200,7 @@ export function AppSidebar() {
         ) : null}
       </SidebarHeader>
       <SidebarContent className="p-4">
-        {isAuthPending ? (
+        {sessionQuery.isPending ? (
           <>
             <Skeleton className="mb-3 h-4 w-20 rounded-none" />
             <SidebarGroupContent>
@@ -256,7 +257,7 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="text-xs text-gray-500">
         <SidebarMenu>
-          {isAuthPending ? (
+          {sessionQuery.isPending ? (
             <>
               <SidebarMenuSkeleton showIcon />
               <SidebarMenuSkeleton showIcon />
@@ -283,7 +284,7 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           ) : null}
-          {isAuthPending ? (
+          {sessionQuery.isPending ? (
             <SidebarMenuSkeleton showIcon />
           ) : user ? (
             <SidebarMenuItem>
@@ -295,7 +296,7 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           ) : null}
-          {getEnvironment() === "cloudflare" ? null : (
+          {!sessionQuery.data || sessionQuery.data.environment === "cloudflare" ? null : (
             <SidebarMenuItem>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

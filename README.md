@@ -3,7 +3,7 @@
 <a href="https://luvabase.com/?url=https://github.com/simonbengtsson/skrivla"><img src="https://luvabase.com/deploy_small.svg" alt="Deploy to Luvabase"/></a>
 <a href="https://deploy.workers.cloudflare.com/?url=https://github.com/simonbengtsson/skrivla"><img src="https://deploy.workers.cloudflare.com/button" alt="Deploy to Cloudflare"/></a>
 
-🌎 Just share a link and instantly write together. No account needed.<br>
+🌎 Just share a link and instantly write together. No login needed.<br>
 🎨 Rich text editing and Markdown shortcuts.<br>
 ❤️ Free forever, open source, self-hostable on Luvabase and Cloudflare.<br>
 
