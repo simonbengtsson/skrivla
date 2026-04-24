@@ -1,6 +1,6 @@
 # Skrivla
 
-<a target="_blank" href="https://luvabase.com/?url=https://github.com/simonbengtsson/skrivla"><img src="https://luvabase.com/deploy.svg" alt="Deploy to Luvabase"/></a>
+<a target="_blank" href="https://luvabase.com/apps/luvachat/install"><img src="https://luvabase.com/deploy.svg" alt="Deploy to Luvabase"/></a>
 <a target="_blank" href="https://deploy.workers.cloudflare.com/?url=https://github.com/simonbengtsson/skrivla"><img src="https://deploy.workers.cloudflare.com/button" alt="Deploy to Cloudflare"/></a>
 
 🌎 Just share a link and instantly write together. No login needed.<br>
@@ -15,7 +15,7 @@ Skrivla is your self-hostable collaborative editor. Think Google Docs, but speci
 
 ## Getting started
 
-The easiest way to use Skrivla is to [install it on Luvabase](https://luvabase.com/?url=https://github.com/simonbengtsson/skrivla). On Luvabase authentication is managed for you.
+The easiest way to use Skrivla is to [install it on Luvabase](https://luvabase.com/apps/luvachat/install). On Luvabase authentication is managed for you.
 
 You can also [Deploy to Cloudflare](https://deploy.workers.cloudflare.com/?url=https://github.com/simonbengtsson/skrivla) and protect your Skrivla instance with [Cloudflare Access](https://developers.cloudflare.com/cloudflare-for-platforms/cloudflare-for-saas/security/secure-with-access).
 
