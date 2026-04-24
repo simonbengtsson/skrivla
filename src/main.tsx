@@ -53,7 +53,7 @@ if (rootElement && !rootElement.innerHTML) {
           maxAge: QUERY_CACHE_MAX_AGE_MS,
           persister,
           dehydrateOptions: {
-            shouldDehydrateQuery: (query) => shouldPersistQuery(query.queryKey),
+            shouldDehydrateQuery: (query) => shouldPersistQuery(query.queryKey, query.state.data),
           },
         }}
       >
