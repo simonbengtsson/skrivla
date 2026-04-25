@@ -2,6 +2,7 @@
 
 import { trackEvent } from "@/core/analytics"
 import { createPage, getMembers, listPages, queryKeys } from "@/core/api"
+import { syncPageCache } from "@/core/pageCache"
 import { clearPersistedQueryCache } from "@/core/queryPersistence"
 import { DEV_AUTH_ANONYMOUS_VALUE, DEV_AUTH_COOKIE_NAME } from "@/core/shared"
 import type { Page } from "@/core/types"
@@ -104,13 +105,7 @@ export function AppSidebar() {
   const createPageMutation = useMutation({
     mutationFn: () => createPage(),
     onSuccess: (page) => {
-      queryClient.setQueryData(queryKeys.pages, (currentPages: Page[] | undefined) => {
-        if (!currentPages) {
-          return [page]
-        }
-
-        return [page, ...currentPages.filter((currentPage) => currentPage.id !== page.id)]
-      })
+      syncPageCache(queryClient, page)
 
       trackEvent("pageCreated", { pageId: page.id })
       setOpenMobile(false)

@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table"
 import { listTrashPages, queryKeys, restorePage } from "@/core/api"
 import { formatAbsoluteDate } from "@/core/dateUtils"
-import { upsertPageByCreatedAtDescending } from "@/core/pageList"
+import { syncPageCache } from "@/core/pageCache"
 import type { Page } from "@/core/types"
 import { useSession } from "@/core/UserContext"
 import { cn } from "@/lib/utils"
@@ -43,10 +43,7 @@ function TrashPage() {
 
         return currentPages.filter((currentPage) => currentPage.id !== restoredPage.id)
       })
-      queryClient.setQueryData(queryKeys.pages, (currentPages: Page[] | undefined) => {
-        return upsertPageByCreatedAtDescending(currentPages, restoredPage)
-      })
-      queryClient.setQueryData(queryKeys.page(restoredPage.id), restoredPage)
+      syncPageCache(queryClient, restoredPage)
     },
   })
 

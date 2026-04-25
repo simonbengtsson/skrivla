@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { trackEvent } from "@/core/analytics"
 import { deletePage, getPage, queryKeys, updatePage } from "@/core/api"
+import { syncPageCache } from "@/core/pageCache"
 import { serializePageMarkdown } from "@/core/pageDocument"
 import { upsertPageByCreatedAtDescending } from "@/core/pageList"
 import type { LuvabaseMember, Page } from "@/core/types"
@@ -67,8 +68,7 @@ function PageInstancePage() {
   const updatePageMutation = useMutation({
     mutationFn: (name: string) => updatePage(pageId, { name }),
     onSuccess: (updatedPage) => {
-      queryClient.setQueryData(queryKeys.page(pageId), updatedPage)
-      syncPageListCache(queryClient, updatedPage)
+      syncPageCache(queryClient, updatedPage)
     },
   })
 

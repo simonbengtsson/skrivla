@@ -2,8 +2,8 @@ import { Header } from "@/components/Header"
 import { Button } from "@/components/ui/button"
 import { SidebarInset } from "@/components/ui/sidebar"
 import { Skeleton } from "@/components/ui/skeleton"
-import { createPage, queryKeys } from "@/core/api"
-import type { Page } from "@/core/types"
+import { createPage } from "@/core/api"
+import { syncPageCache } from "@/core/pageCache"
 import { useSession } from "@/core/UserContext"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, useRouter } from "@tanstack/react-router"
@@ -20,13 +20,7 @@ function App() {
   const createPageMutation = useMutation({
     mutationFn: () => createPage(),
     onSuccess: (page) => {
-      queryClient.setQueryData(queryKeys.pages, (currentPages: Page[] | undefined) => {
-        if (!currentPages) {
-          return [page]
-        }
-
-        return [page, ...currentPages.filter((currentPage) => currentPage.id !== page.id)]
-      })
+      syncPageCache(queryClient, page)
 
       router.navigate({
         to: "/p/$pageId",
