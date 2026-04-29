@@ -59,9 +59,7 @@ function TrashPage() {
             <h1 className="font-heading text-3xl font-bold text-gray-800 dark:text-gray-100">
               Trash
             </h1>
-            <p className="text-sm text-muted-foreground">
-              Deleted pages stay here for now. Restore and permanent delete can come later.
-            </p>
+            <p className="text-sm text-muted-foreground">Deleted pages are listed here.</p>
           </div>
 
           {sessionQuery.isPending || isTrashLoading ? (
