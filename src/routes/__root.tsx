@@ -6,7 +6,6 @@ import { MixpanelInit } from "@/core/analytics"
 import { queryClient } from "@/core/queryClient"
 import { CurrentUserTracker } from "@/core/UserContext"
 import { Outlet, createRootRouteWithContext } from "@tanstack/react-router"
-import { useEffect } from "react"
 
 export interface RouterAppContext {
   queryClient: typeof queryClient
@@ -17,7 +16,6 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
   notFoundComponent: RouterNotFoundPage,
   component: () => (
     <>
-      <SystemThemeSync />
       <MixpanelInit />
       <CurrentUserTracker />
       <TooltipProvider>
@@ -29,23 +27,3 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
     </>
   ),
 })
-
-function SystemThemeSync() {
-  useEffect(() => {
-    const media = window.matchMedia("(prefers-color-scheme: dark)")
-
-    const syncTheme = () => {
-      document.documentElement.classList.toggle("dark", media.matches)
-      document.documentElement.style.colorScheme = media.matches ? "dark" : "light"
-    }
-
-    syncTheme()
-    media.addEventListener("change", syncTheme)
-
-    return () => {
-      media.removeEventListener("change", syncTheme)
-    }
-  }, [])
-
-  return null
-}
