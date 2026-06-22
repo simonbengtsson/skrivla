@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "skrivla-wrangler-deploy",
+  "name": "skrivla",
   "compatibility_date": "2026-04-20",
   "main": "src/server/worker.ts",
   "vars": {
