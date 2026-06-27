@@ -11,8 +11,8 @@
     "dev": "vite dev",
     "build": "vite build",
     "serve": "vite preview",
-    "deploy": "bun run build && wrangler deploy",
-    "deploy:luvabase": "luvabase deploy",
+    "deploy:cf": "bun run build && wrangler deploy",
+    "deploy:lv": "luvabase deploy",
     "test": "vitest run"
   },
   "dependencies": {
