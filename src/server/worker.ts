@@ -1,23 +1,33 @@
 import { DurableObject } from "cloudflare:workers"
+import { Fragment, type Mark as ProseMirrorMark } from "@tiptap/pm/model"
+import { Transform } from "@tiptap/pm/transform"
 import { and, desc, eq, isNotNull, isNull } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/durable-sqlite/driver"
 import { migrate } from "drizzle-orm/durable-sqlite/migrator"
 import * as decoding from "lib0/decoding"
 import * as encoding from "lib0/encoding"
-import { prosemirrorJSONToYDoc, yXmlFragmentToProseMirrorRootNode } from "y-prosemirror"
+import {
+  initProseMirrorDoc,
+  prosemirrorJSONToYDoc,
+  updateYFragment,
+  yXmlFragmentToProseMirrorRootNode,
+} from "y-prosemirror"
 import * as awarenessProtocol from "y-protocols/awareness"
 import * as syncProtocol from "y-protocols/sync"
 import * as Y from "yjs"
-import { PAGE_DOC_FIELD, pageSchema } from "../core/pageDocument"
+import { PAGE_DOC_FIELD, pageSchema, serializePageBodyMarkdown } from "../core/pageDocument"
 import { pages } from "../core/schema"
 import type { PageContent } from "../core/types"
 import { generateShortId } from "../core/utils"
 import { getCurrentUser, getDevMembers, getEnvironment, isAuthenticated } from "./luvabase"
+import { handleMcpRequest } from "./mcp"
 import { migrations } from "./migrations"
 
 const WORKSPACE_DO_NAME = "workspace"
 const PAGE_CONTENT_KEY = "content"
 const PAGE_DOCUMENT_KEY = "document"
+const MCP_SNAPSHOT_PREFIX = "mcp-snapshot:"
+const MCP_SNAPSHOT_MAX_AGE_MS = 24 * 60 * 60 * 1000
 const MESSAGE_SYNC = 0
 const MESSAGE_AWARENESS = 1
 const MESSAGE_QUERY_AWARENESS = 3
@@ -25,6 +35,35 @@ const MESSAGE_QUERY_AWARENESS = 3
 type PageSocketAttachment = {
   awarenessClientIds: number[]
 }
+
+type McpSnapshot = {
+  createdAt: string
+  document: string
+}
+
+type ProseMirrorJson = Record<string, unknown>
+type ProseMirrorMarkJson = {
+  type: string
+  attrs?: Record<string, unknown>
+}
+
+type McpEditOperation =
+  | { type: "insert"; position: number; content: ProseMirrorJson[] }
+  | { type: "replace"; from: number; to: number; content: ProseMirrorJson[] }
+  | { type: "delete"; from: number; to: number }
+  | {
+      type: "add_mark" | "remove_mark"
+      from: number
+      to: number
+      mark: ProseMirrorMarkJson
+    }
+  | {
+      type: "set_node_markup"
+      position: number
+      node_type?: string
+      attrs?: Record<string, unknown>
+      marks?: ProseMirrorMarkJson[]
+    }
 
 export default {
   async fetch(request: Request, env: Cloudflare.Env) {
@@ -41,6 +80,10 @@ export default {
         user: currentUser,
         environment: getEnvironment(),
       })
+    }
+
+    if (url.pathname === "/mcp") {
+      return handleMcpRequest(request, env)
     }
 
     const collaborationMatch = matchPageCollaborationPath(url.pathname)
@@ -87,6 +130,52 @@ export class WorkspaceDO extends DurableObject {
   async fetch(request: Request) {
     const url = new URL(request.url)
     const pathname = url.pathname
+
+    if (pathname === "/internal/mcp/pages") {
+      if (request.method === "GET") {
+        const currentPages = await this.db
+          .select()
+          .from(pages)
+          .where(isNull(pages.deletedAt))
+          .orderBy(desc(pages.updatedAt))
+
+        return Response.json(currentPages)
+      }
+
+      if (request.method === "POST") {
+        const body = await readJsonBody<{ title?: string; creatorId?: string }>(request)
+        const now = new Date().toISOString()
+        const page = {
+          id: generateShortId(),
+          name: body.title ?? "",
+          creatorId: body.creatorId ?? "public-mcp",
+          createdAt: now,
+          updatedAt: now,
+          deletedAt: null,
+        }
+
+        await this.db.insert(pages).values(page)
+        return Response.json(page, { status: 201 })
+      }
+    }
+
+    const internalMcpPageMatch = pathname.match(/^\/internal\/mcp\/pages\/([^/]+)$/)
+    if (internalMcpPageMatch && request.method === "PATCH") {
+      const pageId = decodeURIComponent(internalMcpPageMatch[1]!)
+      const page = await this.getPageById(pageId)
+      if (!page) {
+        return new Response("Not found", { status: 404 })
+      }
+
+      const body = await readJsonBody<{ title?: string }>(request)
+      const now = new Date().toISOString()
+      await this.db
+        .update(pages)
+        .set({ name: body.title ?? page.name, updatedAt: now })
+        .where(and(eq(pages.id, pageId), isNull(pages.deletedAt)))
+
+      return Response.json(await this.getPageById(pageId))
+    }
 
     const internalPageMatch = matchInternalPagePath(pathname)
     if (internalPageMatch) {
@@ -328,6 +417,38 @@ export class PageDO extends DurableObject {
     const url = new URL(request.url)
     const pathname = url.pathname
 
+    const internalMcpMatch = matchInternalPageMcpPath(pathname)
+    if (internalMcpMatch) {
+      const pageExists = await this.pageExists(internalMcpMatch.pageId)
+      if (!pageExists) {
+        return new Response("Not found", { status: 404 })
+      }
+
+      this.ensureDocumentLoaded()
+
+      if (internalMcpMatch.action === "read" && request.method === "POST") {
+        return Response.json(this.createMcpSnapshot())
+      }
+
+      if (internalMcpMatch.action === "edit" && request.method === "POST") {
+        try {
+          const body = await readJsonBody<{
+            snapshotId?: string
+            operations?: McpEditOperation[]
+          }>(request)
+          this.applyMcpEdits(body.snapshotId ?? "", body.operations ?? [])
+          return Response.json(this.createMcpSnapshot())
+        } catch (error) {
+          return Response.json(
+            { error: error instanceof Error ? error.message : "Invalid edit" },
+            { status: 400 },
+          )
+        }
+      }
+
+      return new Response("Method not allowed", { status: 405 })
+    }
+
     const internalPurgeMatch = matchInternalPagePurgePath(pathname)
     if (internalPurgeMatch && request.method === "POST") {
       for (const socket of this.ctx.getWebSockets()) {
@@ -525,6 +646,188 @@ export class PageDO extends DurableObject {
 
     this.ctx.storage.kv.put(PAGE_DOCUMENT_KEY, encodeStoredDocument(encodedState))
     this.ctx.storage.kv.put(PAGE_CONTENT_KEY, content)
+  }
+
+  private createMcpSnapshot() {
+    const snapshotId = crypto.randomUUID()
+    const now = new Date()
+    const encodedDocument = Y.encodeStateAsUpdate(this.doc)
+    const rootNode = yXmlFragmentToProseMirrorRootNode(
+      this.doc.getXmlFragment(PAGE_DOC_FIELD),
+      pageSchema,
+    )
+    const segments: Array<{
+      from: number
+      to: number
+      text: string
+      marks: string[]
+    }> = []
+    const blocks: Array<{
+      from: number
+      to: number
+      type: string
+      text: string
+      empty: boolean
+    }> = []
+
+    rootNode.forEach((node, offset) => {
+      blocks.push({
+        from: offset,
+        to: offset + node.nodeSize,
+        type: node.type.name,
+        text: node.textContent,
+        empty: node.type.name === "paragraph" && node.content.size === 0,
+      })
+    })
+
+    rootNode.descendants((node, position) => {
+      if (node.isText && node.text) {
+        segments.push({
+          from: position,
+          to: position + node.nodeSize,
+          text: node.text,
+          marks: node.marks.map((mark) => mark.type.name),
+        })
+      }
+    })
+
+    this.ctx.storage.kv.put(`${MCP_SNAPSHOT_PREFIX}${snapshotId}`, {
+      createdAt: now.toISOString(),
+      document: encodeStoredDocument(encodedDocument),
+    } satisfies McpSnapshot)
+    this.removeExpiredMcpSnapshots(now.getTime())
+
+    const content = this.ctx.storage.kv.get<PageContent>(PAGE_CONTENT_KEY)
+
+    return {
+      documentId: this.pageId,
+      snapshotId,
+      revision: encodeStoredDocument(Y.encodeStateVector(this.doc)),
+      updatedAt: content?.updatedAt ?? null,
+      markdown: serializePageBodyMarkdown(this.doc),
+      text: rootNode.textBetween(0, rootNode.content.size, "\n\n"),
+      tiptapJson: rootNode.toJSON(),
+      prosemirrorSize: rootNode.content.size,
+      blocks,
+      segments,
+    }
+  }
+
+  private removeExpiredMcpSnapshots(now: number) {
+    for (const [key, snapshot] of this.ctx.storage.kv.list<McpSnapshot>({
+      prefix: MCP_SNAPSHOT_PREFIX,
+    })) {
+      if (now - Date.parse(snapshot.createdAt) > MCP_SNAPSHOT_MAX_AGE_MS) {
+        this.ctx.storage.kv.delete(key)
+      }
+    }
+  }
+
+  private applyMcpEdits(snapshotId: string, operations: McpEditOperation[]) {
+    const snapshotKey = `${MCP_SNAPSHOT_PREFIX}${snapshotId}`
+    const snapshot = this.ctx.storage.kv.get<McpSnapshot>(snapshotKey)
+    if (!snapshot) {
+      throw new Error("Snapshot not found or expired; call read_document again")
+    }
+
+    if (Date.now() - Date.parse(snapshot.createdAt) > MCP_SNAPSHOT_MAX_AGE_MS) {
+      this.ctx.storage.kv.delete(snapshotKey)
+      throw new Error("Snapshot expired; call read_document again")
+    }
+
+    const snapshotUpdate = decodeStoredDocument(snapshot.document)
+    if (!snapshotUpdate) {
+      throw new Error("Snapshot is invalid; call read_document again")
+    }
+
+    const editingDoc = new Y.Doc()
+    Y.applyUpdate(editingDoc, snapshotUpdate, "mcp-snapshot")
+    const baseStateVector = Y.encodeStateVector(editingDoc)
+    const fragment = editingDoc.getXmlFragment(PAGE_DOC_FIELD)
+    const { doc: originalRoot, meta } = initProseMirrorDoc(fragment, pageSchema)
+    const transform = new Transform(originalRoot)
+
+    for (const operation of operations) {
+      if (operation.type === "insert") {
+        this.assertMcpPosition(operation.position, transform.doc.content.size)
+        transform.insert(operation.position, this.parseProseMirrorContent(operation.content))
+        continue
+      }
+
+      if (operation.type === "set_node_markup") {
+        this.assertMcpPosition(operation.position, transform.doc.content.size)
+        const nodeType = operation.node_type ? pageSchema.nodes[operation.node_type] : undefined
+        if (operation.node_type && !nodeType) {
+          throw new Error(`Unsupported node type: ${operation.node_type}`)
+        }
+
+        const marks = operation.marks?.map((mark) => this.parseProseMirrorMark(mark))
+        transform.setNodeMarkup(operation.position, nodeType, operation.attrs, marks)
+        continue
+      }
+
+      this.assertMcpRange(operation.from, operation.to, transform.doc.content.size)
+
+      if (operation.type === "replace") {
+        transform.replaceWith(
+          operation.from,
+          operation.to,
+          this.parseProseMirrorContent(operation.content),
+        )
+        continue
+      }
+
+      if (operation.type === "delete") {
+        transform.delete(operation.from, operation.to)
+        continue
+      }
+
+      const mark = this.parseProseMirrorMark(operation.mark)
+
+      if (operation.type === "add_mark") {
+        transform.addMark(operation.from, operation.to, mark)
+      } else {
+        transform.removeMark(operation.from, operation.to, mark)
+      }
+    }
+
+    transform.doc.check()
+    updateYFragment(editingDoc, fragment, transform.doc, meta)
+    const agentUpdate = Y.encodeStateAsUpdate(editingDoc, baseStateVector)
+    Y.applyUpdate(this.doc, agentUpdate, "mcp")
+    this.ctx.storage.kv.delete(snapshotKey)
+  }
+
+  private assertMcpPosition(position: number, documentSize: number) {
+    if (!Number.isInteger(position) || position < 0 || position > documentSize) {
+      throw new Error(`Position ${position} is outside the current transaction document`)
+    }
+  }
+
+  private assertMcpRange(from: number, to: number, documentSize: number) {
+    this.assertMcpPosition(from, documentSize)
+    this.assertMcpPosition(to, documentSize)
+    if (to < from) {
+      throw new Error(`Range ${from}..${to} is invalid`)
+    }
+  }
+
+  private parseProseMirrorContent(content: ProseMirrorJson[]) {
+    const nodes = content.map((value) => {
+      const node = pageSchema.nodeFromJSON(value)
+      node.check()
+      return node
+    })
+    return Fragment.fromArray(nodes)
+  }
+
+  private parseProseMirrorMark(mark: ProseMirrorMarkJson): ProseMirrorMark {
+    const markType = pageSchema.marks[mark.type]
+    if (!markType) {
+      throw new Error(`Unsupported mark type: ${mark.type}`)
+    }
+
+    return markType.create(mark.attrs)
   }
 
   private serializePageContent(updatedAt: string): PageContent {
@@ -737,5 +1040,17 @@ function matchInternalPagePurgePath(pathname: string) {
 
   return {
     pageId: decodeURIComponent(match[1]!),
+  }
+}
+
+function matchInternalPageMcpPath(pathname: string) {
+  const match = pathname.match(/^\/internal\/pages\/([^/]+)\/mcp\/(read|edit)$/)
+  if (!match) {
+    return null
+  }
+
+  return {
+    pageId: decodeURIComponent(match[1]!),
+    action: match[2] as "read" | "edit",
   }
 }

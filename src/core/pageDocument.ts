@@ -17,6 +17,12 @@ const pageMarkdownManager = new MarkdownManager({
   extensions: pageExtensions,
 })
 
+export function serializePageBodyMarkdown(doc: Y.Doc) {
+  const rootNode = yXmlFragmentToProseMirrorRootNode(doc.getXmlFragment(PAGE_DOC_FIELD), pageSchema)
+
+  return pageMarkdownManager.serialize(rootNode.toJSON())
+}
+
 export function serializePageMarkdown(doc: Y.Doc, pageTitle: string) {
   const rootNode = yXmlFragmentToProseMirrorRootNode(doc.getXmlFragment(PAGE_DOC_FIELD), pageSchema)
   const content = rootNode.toJSON().content ?? []
