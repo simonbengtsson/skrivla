@@ -13,5 +13,7 @@
   "screenshots": [
     "public/screenshot.png"
   ],
-  "accessLevel": "public",
+  "proxyResponses": {
+    "/.well-known/openai-apps-challenge": "cyu8tmVdoZAxSobegQMa27XgIdDni_brt7NFzrFNIcs",
+  }
 }
