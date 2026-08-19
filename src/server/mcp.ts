@@ -67,18 +67,59 @@ const editOperationSchema = z.discriminatedUnion("type", [
   }),
 ])
 
+const pageMetadataSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  creatorId: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  deletedAt: z.string().nullable(),
+})
+const documentSnapshotSchema = z.object({
+  documentId: z.string(),
+  snapshotId: z.string(),
+  revision: z.string(),
+  updatedAt: z.string().nullable(),
+  markdown: z.string(),
+  text: z.string(),
+  tiptapJson: z.record(z.unknown()),
+  prosemirrorSize: z.number().int().nonnegative(),
+  blocks: z.array(
+    z.object({
+      from: z.number().int().nonnegative(),
+      to: z.number().int().nonnegative(),
+      type: z.string(),
+      text: z.string(),
+      empty: z.boolean(),
+    }),
+  ),
+  segments: z.array(
+    z.object({
+      from: z.number().int().nonnegative(),
+      to: z.number().int().nonnegative(),
+      text: z.string(),
+      marks: z.array(z.string()),
+    }),
+  ),
+})
+
 type JsonToolResult = {
   content: Array<{ type: "text"; text: string }>
+  structuredContent?: Record<string, unknown>
   isError?: boolean
 }
 
-type McpToolConfig<InputSchema extends z.ZodTypeAny> = {
+type McpToolConfig<
+  InputSchema extends z.ZodTypeAny,
+  OutputSchema extends z.ZodTypeAny = z.ZodTypeAny,
+> = {
   title: string
   description: string
   inputSchema: InputSchema
+  outputSchema: OutputSchema
   annotations: {
     readOnlyHint: boolean
-    destructiveHint?: boolean
+    destructiveHint: boolean
     idempotentHint?: boolean
     openWorldHint: boolean
   }
@@ -89,9 +130,9 @@ type McpToolDefinition = {
   config: McpToolConfig<z.ZodTypeAny>
 }
 
-const mcpInputSchemaToJson = toJsonSchemaCompat as unknown as (
+const mcpSchemaToJson = toJsonSchemaCompat as unknown as (
   schema: unknown,
-  options: { strictUnions: boolean; pipeStrategy: "input" },
+  options: { strictUnions: boolean; pipeStrategy: "input" | "output" },
 ) => Record<string, unknown>
 
 export async function handleMcpRequest(request: Request, env: Cloudflare.Env) {
@@ -161,8 +202,12 @@ function createMcpServer(
         query: z.string().optional().describe("Optional case-insensitive title or preview search"),
         limit: z.number().int().min(1).max(100).default(50),
       }),
+      outputSchema: z.object({
+        documents: z.array(pageMetadataSchema.extend({ preview: z.string() })),
+      }),
       annotations: {
         readOnlyHint: true,
+        destructiveHint: false,
         openWorldHint: false,
       },
     },
@@ -198,8 +243,13 @@ function createMcpServer(
       inputSchema: z.object({
         document_id: z.string().min(1),
       }),
+      outputSchema: documentSnapshotSchema.extend({
+        title: z.string(),
+        createdAt: z.string(),
+      }),
       annotations: {
         readOnlyHint: true,
+        destructiveHint: false,
         openWorldHint: false,
       },
     },
@@ -232,6 +282,9 @@ function createMcpServer(
           .array(prosemirrorNodeSchema)
           .default([])
           .describe("Initial top-level ProseMirror node JSON; omit for an empty paragraph"),
+      }),
+      outputSchema: z.object({
+        document: pageMetadataSchema,
       }),
       annotations: {
         readOnlyHint: false,
@@ -268,6 +321,11 @@ function createMcpServer(
         snapshot_id: z.string().min(1),
         title: z.string().optional().describe("Optional new document title"),
         operations: z.array(editOperationSchema).max(100).default([]),
+      }),
+      outputSchema: z.object({
+        document: pageMetadataSchema,
+        appliedOperations: z.number().int().nonnegative(),
+        editingSnapshot: documentSnapshotSchema.nullable(),
       }),
       annotations: {
         readOnlyHint: false,
@@ -322,9 +380,13 @@ function mcpDiscoveryPage(request: Request, env: Cloudflare.Env) {
 
   const toolCards = tools
     .map(({ name, config }) => {
-      const inputSchema = mcpInputSchemaToJson(config.inputSchema, {
+      const inputSchema = mcpSchemaToJson(config.inputSchema, {
         strictUnions: true,
         pipeStrategy: "input",
+      })
+      const outputSchema = mcpSchemaToJson(config.outputSchema, {
+        strictUnions: true,
+        pipeStrategy: "output",
       })
       const badges = [
         config.annotations.readOnlyHint ? "Read only" : "Writes data",
@@ -344,6 +406,10 @@ function mcpDiscoveryPage(request: Request, env: Cloudflare.Env) {
         <details>
           <summary>Input schema</summary>
           <pre><code>${escapeHtml(JSON.stringify(inputSchema, null, 2))}</code></pre>
+        </details>
+        <details>
+          <summary>Output schema</summary>
+          <pre><code>${escapeHtml(JSON.stringify(outputSchema, null, 2))}</code></pre>
         </details>
       </article>`
     })
@@ -541,9 +607,10 @@ async function getPagePreview(env: Cloudflare.Env, pageId: string) {
   }
 }
 
-function jsonResult(value: unknown): JsonToolResult {
+function jsonResult(value: Record<string, unknown>): JsonToolResult {
   return {
     content: [{ type: "text", text: JSON.stringify(value, null, 2) }],
+    structuredContent: value,
   }
 }
 
