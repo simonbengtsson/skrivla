@@ -1,7 +1,6 @@
 # Skrivla
 
 <a target="_blank" href="https://luvabase.com/apps/skrivla/install"><img src="https://luvabase.com/deploy.svg" alt="Deploy to Luvabase"/></a>
-<a target="_blank" href="https://deploy.workers.cloudflare.com/?url=https://github.com/simonbengtsson/skrivla"><img src="https://deploy.workers.cloudflare.com/button" alt="Deploy to Cloudflare"/></a>
 
 🌎 Just share a link and instantly write together. No login needed.<br>
 🎨 Rich text editing and Markdown shortcuts.<br>
@@ -17,7 +16,7 @@ Skrivla is your self-hostable collaborative editor. Think Google Docs, but speci
 
 The easiest way to use Skrivla is to [install it on Luvabase](https://luvabase.com/apps/skrivla/install). On Luvabase authentication is managed for you.
 
-You can also [Deploy to Cloudflare](https://deploy.workers.cloudflare.com/?url=https://github.com/simonbengtsson/skrivla) and protect your Skrivla instance with [Cloudflare Access](https://developers.cloudflare.com/cloudflare-for-platforms/cloudflare-for-saas/security/secure-with-access).
+You can also [Deploy to Cloudflare](https://deploy.workers.cloudflare.com/?url=https://github.com/simonbengtsson/skrivla) and protect your Skrivla instance with [Cloudflare Access](https://developers.cloudflare.com/cloudflare-for-platforms/cloudflare-for-saas/security/secure-with-access). Direct Cloudflare deployment comes with some asterixes however: Everyone who should read or write to a document needs to be allowed in Cloudflare Access (no public doc editing) and the MCP server (ChatGPT integration etc) does not work.
 
 ## Stack
 
