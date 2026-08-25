@@ -56,6 +56,8 @@ function PageInstancePage() {
   const { session, hasSynced: hasCollaborationSynced } = useCollaborationSession(pageId)
   const queryClient = useQueryClient()
   const saveNameTimeoutRef = useRef<number | null>(null)
+  const draftPageIdRef = useRef<string | null>(null)
+  const latestDraftNameRef = useRef("")
   const [editorFocusRequest, setEditorFocusRequest] = useState(0)
   const [initialFocusTarget, setInitialFocusTarget] = useState<"title" | "editor" | null>(null)
 
@@ -67,8 +69,10 @@ function PageInstancePage() {
 
   const updatePageMutation = useMutation({
     mutationFn: (name: string) => updatePage(pageId, { name }),
-    onSuccess: (updatedPage) => {
-      syncPageCache(queryClient, updatedPage)
+    scope: { id: `page-title-${pageId}` },
+    onSuccess: (updatedPage, savedName) => {
+      const latestName = draftPageIdRef.current === pageId ? latestDraftNameRef.current : savedName
+      syncPageCache(queryClient, { ...updatedPage, name: latestName })
     },
   })
 
@@ -77,8 +81,14 @@ function PageInstancePage() {
   const [draftName, setDraftName] = useState("")
 
   useEffect(() => {
-    setDraftName(page?.name ?? "")
-  }, [page?.name, pageId])
+    if (!page || draftPageIdRef.current === pageId) {
+      return
+    }
+
+    draftPageIdRef.current = pageId
+    latestDraftNameRef.current = page.name
+    setDraftName(page.name)
+  }, [page, pageId])
 
   useEffect(() => {
     setEditorFocusRequest(0)
@@ -104,6 +114,15 @@ function PageInstancePage() {
       }
     }
   }, [])
+
+  function saveDraftName(name: string) {
+    if (saveNameTimeoutRef.current != null) {
+      window.clearTimeout(saveNameTimeoutRef.current)
+      saveNameTimeoutRef.current = null
+    }
+
+    updatePageMutation.mutate(name)
+  }
 
   if (!isLoading && page === null) {
     return <RouterNotFoundPage />
@@ -145,10 +164,19 @@ function PageInstancePage() {
                     }
 
                     event.preventDefault()
+                    if (saveNameTimeoutRef.current != null) {
+                      saveDraftName(latestDraftNameRef.current)
+                    }
                     setEditorFocusRequest((currentCount) => currentCount + 1)
+                  }}
+                  onBlur={() => {
+                    if (saveNameTimeoutRef.current != null) {
+                      saveDraftName(latestDraftNameRef.current)
+                    }
                   }}
                   onChange={(event) => {
                     const nextName = event.target.value
+                    latestDraftNameRef.current = nextName
                     setDraftName(nextName)
 
                     queryClient.setQueryData(
@@ -172,6 +200,7 @@ function PageInstancePage() {
                     }
 
                     saveNameTimeoutRef.current = window.setTimeout(() => {
+                      saveNameTimeoutRef.current = null
                       updatePageMutation.mutate(nextName)
                     }, 300)
                   }}

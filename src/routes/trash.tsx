@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { listTrashPages, queryKeys, restorePage } from "@/core/api"
-import { formatAbsoluteDate } from "@/core/dateUtils"
+import { formatDate } from "@/core/dateUtils"
 import { syncPageCache } from "@/core/pageCache"
 import type { Page } from "@/core/types"
 import { useSession } from "@/core/UserContext"
@@ -120,8 +120,8 @@ function TrashTable(props: {
                 <TableCell className={cn("font-medium", isUntitled && "text-muted-foreground")}>
                   {displayName}
                 </TableCell>
-                <TableCell>{formatAbsoluteDate(page.createdAt)}</TableCell>
-                <TableCell>{page.deletedAt ? formatAbsoluteDate(page.deletedAt) : "—"}</TableCell>
+                <TableCell>{formatDate(page.createdAt)}</TableCell>
+                <TableCell>{page.deletedAt ? formatDate(page.deletedAt) : "—"}</TableCell>
                 <TableCell>
                   {props.canRestore ? (
                     <Button

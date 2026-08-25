@@ -11,7 +11,7 @@ const JSON_HEADERS = {
 }
 
 const PROSEMIRROR_INSTRUCTION =
-  'Skrivla content uses ProseMirror JSON and sequential transaction positions. Read a document before editing it. The first operation uses positions from that read_document snapshot; each later operation uses positions in the document produced by all preceding operations in the same list. Block insertions use top-level boundaries, and inline operations use text positions. An empty paragraph is {"type":"paragraph"}.'
+  'Skrivla content uses ProseMirror JSON and sequential transaction positions. The separate document title is displayed as the document H1, so do not repeat the title as a level-1 heading in the content; start content with body text or a subordinate heading instead. Read a document before editing it. The first operation uses positions from that read_document snapshot; each later operation uses positions in the document produced by all preceding operations in the same list. Block insertions use top-level boundaries, and inline operations use text positions. An empty paragraph is {"type":"paragraph"}.'
 
 const prosemirrorMarkSchema = z.object({
   type: z.string().min(1),
@@ -244,7 +244,7 @@ function createMcpServer(
         document_id: z.string().min(1),
       }),
       outputSchema: documentSnapshotSchema.extend({
-        title: z.string(),
+        title: z.string().describe("Document title, displayed as the document H1 above its content"),
         createdAt: z.string(),
       }),
       annotations: {
@@ -277,11 +277,18 @@ function createMcpServer(
       title: "Create a Skrivla document",
       description: `Create a new Skrivla document with optional initial ProseMirror nodes. ${PROSEMIRROR_INSTRUCTION}`,
       inputSchema: z.object({
-        title: z.string().default(""),
+        title: z
+          .string()
+          .default("")
+          .describe(
+            "Document title, displayed as the document H1; do not duplicate it as a level-1 heading in content",
+          ),
         content: z
           .array(prosemirrorNodeSchema)
           .default([])
-          .describe("Initial top-level ProseMirror node JSON; omit for an empty paragraph"),
+          .describe(
+            "Initial top-level ProseMirror node JSON; omit for an empty paragraph. The title is already displayed as H1, so begin with body text or a subordinate heading and do not repeat the title.",
+          ),
       }),
       outputSchema: z.object({
         document: pageMetadataSchema,
@@ -319,7 +326,12 @@ function createMcpServer(
       inputSchema: z.object({
         document_id: z.string().min(1),
         snapshot_id: z.string().min(1),
-        title: z.string().optional().describe("Optional new document title"),
+        title: z
+          .string()
+          .optional()
+          .describe(
+            "Optional new document title, displayed as the document H1; do not duplicate it as a level-1 heading in content",
+          ),
         operations: z.array(editOperationSchema).max(100).default([]),
       }),
       outputSchema: z.object({

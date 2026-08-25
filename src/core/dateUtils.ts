@@ -1,29 +1,11 @@
-const absoluteDateFormatter = new Intl.DateTimeFormat("sv-SE", {
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
+const shortDateFormatter = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "short",
 })
 
-export function formatDateOnly(dateStr: string) {
+export function formatDate(dateStr: string) {
   const date = new Date(dateStr)
-  const isToday = date.toDateString() === new Date().toDateString()
-  if (isToday) {
-    return "Today"
-  }
-  const yesterday = new Date()
-  yesterday.setDate(yesterday.getDate() - 1)
-  const isYesterday = date.toDateString() === yesterday.toDateString()
-  if (isYesterday) {
-    return "Yesterday"
-  }
-  const isThisYear = date.getFullYear() === new Date().getFullYear()
-  if (!isThisYear) {
-    return date.toLocaleDateString("sv")
-  }
-  const month = date.toLocaleString("default", { month: "short" })
-  return `${month} ${date.getDate()}`
-}
-
-export function formatAbsoluteDate(dateStr: string) {
-  return absoluteDateFormatter.format(new Date(dateStr))
+  const dayAndMonth = shortDateFormatter.format(date).toLocaleLowerCase("en-GB")
+  const year = String(date.getFullYear()).slice(-2).padStart(2, "0")
+  return `${dayAndMonth} (${year})`
 }

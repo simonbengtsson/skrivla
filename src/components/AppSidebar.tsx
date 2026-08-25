@@ -12,7 +12,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useRouter, useRouterState } from "@tanstack/react-router"
 import {
   InfoIcon,
+  LucideCheck,
   LucideChevronDown,
+  LucideCopy,
   LucideFileText,
   LucideLogIn,
   LucideLogOut,
@@ -81,6 +83,7 @@ export function AppSidebar() {
   const router = useRouter()
   const queryClient = useQueryClient()
   const [isOpenDialogOpen, setIsOpenDialogOpen] = useState(false)
+  const [mcpCopyState, setMcpCopyState] = useState<"idle" | "copied" | "error">("idle")
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   })
@@ -139,6 +142,20 @@ export function AppSidebar() {
     }
   }, [user])
 
+  useEffect(() => {
+    if (mcpCopyState === "idle") {
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setMcpCopyState("idle")
+    }, 1_500)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [mcpCopyState])
+
   function handleOpenPage(pageId: string) {
     setIsOpenDialogOpen(false)
     setOpenMobile(false)
@@ -168,6 +185,15 @@ export function AppSidebar() {
       })
     } finally {
       window.location.reload()
+    }
+  }
+
+  async function handleCopyMcpUrl() {
+    try {
+      await navigator.clipboard.writeText(new URL("/mcp", window.location.origin).href)
+      setMcpCopyState("copied")
+    } catch {
+      setMcpCopyState("error")
     }
   }
 
@@ -333,6 +359,21 @@ export function AppSidebar() {
                       </a>
                     </DropdownMenuItem>
                   ) : null}
+                  <DropdownMenuItem
+                    onSelect={(event) => {
+                      event.preventDefault()
+                      void handleCopyMcpUrl()
+                    }}
+                  >
+                    {mcpCopyState === "copied" ? <LucideCheck /> : <LucideCopy />}
+                    <span>
+                      {mcpCopyState === "copied"
+                        ? "Copied MCP URL"
+                        : mcpCopyState === "error"
+                          ? "Copy failed"
+                          : "Copy MCP URL"}
+                    </span>
+                  </DropdownMenuItem>
                   {!isDev && user ? <DropdownMenuSeparator /> : null}
                   {!isDev ? (
                     <DropdownMenuItem onSelect={() => void handleLogout()}>
