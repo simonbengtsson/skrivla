@@ -11,6 +11,7 @@
       "type": "web"
     }
   ],
+  "accessLevel": "public",
   "screenshots": [
     "public/screenshot.png"
   ],
