@@ -4,35 +4,35 @@
 
 🌎 Just share a link and instantly write together. No login needed.<br>
 🎨 Rich text editing and Markdown shortcuts.<br>
-🤖 Connect your AI through MCP to find, read and write your pages.<br>
-❤️ Free forever, open source, self-hostable on Luvabase and Cloudflare.<br>
+🤖 Connect your AI through MCP to find, read, and write your pages.<br>
+❤️ Free forever, open source, and self-hostable on Luvabase or Cloudflare.<br>
 
 ![Screenshot of Skrivla](/public/screenshot.png)
 
 ## What is Skrivla?
 
-Skrivla is your self-hostable collaborative editor. Think Google Docs, but specically built for quick brainstorming sessions, meeting notes etc. Just share a link to a page and anyone can collaborate on it.
+Skrivla is your self-hostable collaborative editor. Think Google Docs, but specifically designed for quick brainstorming sessions, meeting notes, and more. Share a page link, and anyone can collaborate on it.
 
 ## Getting started
 
-The easiest way to use Skrivla is to [install it on Luvabase](https://luvabase.com/apps/skrivla/install). On Luvabase authentication is managed for you.
+The easiest way to use Skrivla is to [install it on Luvabase](https://luvabase.com/apps/skrivla/install). On Luvabase, authentication is managed for you.
 
-You can also [Deploy to Cloudflare](https://deploy.workers.cloudflare.com/?url=https://github.com/simonbengtsson/skrivla) and protect your Skrivla instance with [Cloudflare Access](https://developers.cloudflare.com/cloudflare-for-platforms/cloudflare-for-saas/security/secure-with-access). Direct Cloudflare deployment comes with some asterixes however: Everyone who should read or write to a document needs to be allowed in Cloudflare Access (no public doc editing) and the MCP server (ChatGPT integration etc) does not work.
+You can also [deploy to Cloudflare](https://deploy.workers.cloudflare.com/?url=https://github.com/simonbengtsson/skrivla) and protect your Skrivla instance with [Cloudflare Access](https://developers.cloudflare.com/cloudflare-for-platforms/cloudflare-for-saas/security/secure-with-access). Direct Cloudflare deployments come with some caveats, however: everyone who needs to read or write a document must be allowed in Cloudflare Access (no public document editing), and the MCP server, including the ChatGPT integration, does not work.
 
 ## Stack
 
-Skrivla is built as a SPA with light server api and persistance layer on Cloudflare Durable Objects.
+Skrivla is built as a single-page application with a lightweight server API and persistence layer on Cloudflare Durable Objects.
 
-- Server: Cloudflare Durable Objects and Worker
-- Client: Shadcn, tanstack router, vite, tailwind
+- Server: Cloudflare Workers and Durable Objects
+- Client: shadcn/ui, TanStack Router, Vite, and Tailwind CSS
 - Rich text editing with [Tiptap](http://tiptap.dev)
 
 ## Contributions
 
-Very much welcome! The goal is to keep editor minimal, but below are some examples of what would be in scope:
+Contributions are very welcome! The goal is to keep the editor minimal, but the following are some examples of what would be in scope:
 
 - Attachments
-- Agent integration in editor (with Workers AI)
-- MCP server for finding and reading documents
+- Agent integration in the editor (with Workers AI)
+- MCP server for finding, reading, and editing documents
 - A small desktop sync application to sync pages to a local folder for easier access by local agents
-- Page pinning or otherways to improve sidebar for many pages
+- Page pinning or other ways to improve the sidebar when it contains many pages

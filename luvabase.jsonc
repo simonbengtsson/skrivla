@@ -5,7 +5,7 @@
   "subtitle": "Collaborative text editor",
   "icon": "public/apple-icon.png",
   "repository": "https://github.com/simonbengtsson/skrivla",
-  "description": "Skrivla is your self-hosted collaborative document editor. Think Google Docs, but specically built for quick brainstorming sessions, meeting notes etc. Just share a link to a page and anyone can collaborate on it.",
+  "description": "Skrivla is your self-hostable collaborative document editor. Think Google Docs, but specifically designed for quick brainstorming sessions, meeting notes, and more. Share a page link, and anyone can collaborate on it.",
   "surfaces": [
     {
       "type": "web"

@@ -201,7 +201,7 @@ export function AppSidebar() {
     <Sidebar className="border-t">
       <SidebarHeader className="p-5 pb-0" onClick={() => setOpenMobile(false)}>
         <h1 className="font-heading text-2xl font-bold text-gray-500 dark:text-gray-200 flex items-center gap-2">
-          <img src="/appicon-only.svg" alt="Skrivla Logo" width={24} height={24} />
+          <img src="/appicon-only.svg" alt="Skrivla logo" width={24} height={24} />
           Skrivla
         </h1>
         {sessionQuery.isPending ? (
@@ -266,7 +266,7 @@ export function AppSidebar() {
           </>
         ) : (
           <div className="flex flex-col gap-4 border border-dashed border-border p-5 text-sm text-muted-foreground">
-            <p>Log in to view your pages, create new documents and manage this pod.</p>
+            <p>Log in to view and create pages, and to manage this pod.</p>
             <Button asChild className="justify-start">
               <a href={"/luvabase/login"} onClick={() => setOpenMobile(false)}>
                 <LucideLogIn />
@@ -301,9 +301,9 @@ export function AppSidebar() {
                     <DialogTitle>Connect your AI</DialogTitle>
                   </DialogHeader>
                   <DialogDescription>
-                    By connecting the MCP server to your AI, it will be able to list, read and write
-                    pages in Skrivla for you. Normally it is enough to use the setup prompt below,
-                    but you can also set it up manually with the MCP URL below if needed.
+                    When you connect the MCP server to your AI, it can list, read, and write Skrivla
+                    pages for you. The setup prompt below is usually all you need, but you can also
+                    connect manually using the MCP URL.
                   </DialogDescription>
 
                   <div className="space-y-2">
@@ -474,8 +474,8 @@ export function AppSidebar() {
                 </DialogHeader>
                 <DialogDescription asChild>
                   <div>
-                    Skrivla is a minimal collaborative text editor. Perfect for quick thoughts,
-                    meeting notes and collaborative brainstorming.
+                    Skrivla is a minimal collaborative text editor, perfect for quick thoughts,
+                    meeting notes, and collaborative brainstorming.
                     <br />
                     <br />
                     {sellingPoints.map((point) => (
@@ -542,11 +542,11 @@ const sellingPoints = [
   {
     icon: "🤖",
     title: "Connect your AI",
-    description: "Use MCP to let your AI find, read and write your pages.",
+    description: "Use MCP to let your AI find, read, and write your pages.",
   },
   {
     icon: "🎨",
-    title: "Designed for desktop, mobile and dark mode",
-    description: "Works on any device and any system theme.",
+    title: "Designed for every screen and theme",
+    description: "Works on desktop and mobile in both light and dark modes.",
   },
 ]

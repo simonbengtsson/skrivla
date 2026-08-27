@@ -354,8 +354,8 @@ function PageInstanceHeader(props: {
             <DialogDescription asChild>
               <div className="space-y-2">
                 <p>
-                  Share the the browser page url or link below to collaborate with anyone. Anyone
-                  with the link can read and edit the page.
+                  Share this page&apos;s URL to collaborate with anyone. Anyone with the link can read
+                  and edit the page.
                 </p>
               </div>
             </DialogDescription>
@@ -390,11 +390,11 @@ function PageInstanceHeader(props: {
             </div>
           </DialogContent>
         </Dialog>
-        <HeaderButtonTooltip content="Copy as markdown">
+        <HeaderButtonTooltip content="Copy as Markdown">
           <Button
             size="icon-sm"
             variant="outline"
-            aria-label="Copy as markdown"
+            aria-label="Copy as Markdown"
             disabled={!props.session || !props.hasCollaborationSynced}
             onClick={handleCopyMarkdown}
           >

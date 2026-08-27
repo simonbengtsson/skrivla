@@ -3,14 +3,12 @@ import { Button } from "@/components/ui/button"
 import { SidebarInset } from "@/components/ui/sidebar"
 import { Skeleton } from "@/components/ui/skeleton"
 import { createPage } from "@/core/api"
-import { requireAuthenticatedSession } from "@/core/auth"
 import { syncPageCache } from "@/core/pageCache"
 import { useSession } from "@/core/UserContext"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, useRouter } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/")({
-  beforeLoad: ({ context }) => requireAuthenticatedSession(context.queryClient),
   component: App,
 })
 
@@ -49,11 +47,11 @@ function App() {
             <div className="flex w-full max-w-sm flex-col items-center gap-3 text-center">
               <div className="space-y-2">
                 <h1 className="flex items-center justify-center gap-2 font-heading text-3xl sm:text-5xl font-bold text-gray-500 dark:text-gray-200">
-                  <img src="/appicon-only.svg" alt="Skrivla Logo" className="size-8 sm:size-14" />
+                  <img src="/appicon-only.svg" alt="Skrivla logo" className="size-8 sm:size-14" />
                   Skrivla
                 </h1>
                 <p className="sm:text-xl leading-6 text-muted-foreground py-4">
-                  Create a page and share it for realtime collaboration with anyone. No login
+                  Create a page and share it to collaborate in real time with anyone. No login
                   needed.
                 </p>
               </div>
