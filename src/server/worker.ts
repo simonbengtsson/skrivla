@@ -91,7 +91,8 @@ export default {
     }
 
     if (
-      url.pathname === "/.well-known/oauth-protected-resource" &&
+      (url.pathname === "/.well-known/oauth-protected-resource" ||
+        url.pathname === "/.well-known/oauth-protected-resource/mcp") &&
       (request.method === "GET" || request.method === "HEAD")
     ) {
       return handleOAuthProtectedResourceMetadataRequest(request, env as McpOAuthEnv)
