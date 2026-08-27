@@ -12,9 +12,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useRouter, useRouterState } from "@tanstack/react-router"
 import {
   InfoIcon,
+  LucideBot,
   LucideCheck,
   LucideChevronDown,
-  LucideCopy,
   LucideFileText,
   LucideLogIn,
   LucideLogOut,
@@ -53,6 +53,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu"
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "./ui/input-group"
 import {
   Sidebar,
   SidebarContent,
@@ -83,13 +84,17 @@ export function AppSidebar() {
   const router = useRouter()
   const queryClient = useQueryClient()
   const [isOpenDialogOpen, setIsOpenDialogOpen] = useState(false)
-  const [mcpCopyState, setMcpCopyState] = useState<"idle" | "copied" | "error">("idle")
+  const [isMcpDialogOpen, setIsMcpDialogOpen] = useState(false)
+  const [mcpUrlCopyState, setMcpUrlCopyState] = useState<"idle" | "copied" | "error">("idle")
+  const [mcpPromptCopyState, setMcpPromptCopyState] = useState<"idle" | "copied" | "error">("idle")
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   })
   const podId = getPodIdFromHostname(window.location.hostname)
   const podUrl = `https://luvabase.com/dash/pods/${podId}`
   const podAdminUrl = `${podUrl}`
+  const mcpUrl = new URL("/mcp", window.location.origin).href
+  const mcpPrompt = `Connect to this Skrivla MCP server: ${mcpUrl}`
   const isDev = import.meta.env.DEV
 
   const pagesQuery = useQuery({
@@ -142,20 +147,6 @@ export function AppSidebar() {
     }
   }, [user])
 
-  useEffect(() => {
-    if (mcpCopyState === "idle") {
-      return
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setMcpCopyState("idle")
-    }, 1_500)
-
-    return () => {
-      window.clearTimeout(timeoutId)
-    }
-  }, [mcpCopyState])
-
   function handleOpenPage(pageId: string) {
     setIsOpenDialogOpen(false)
     setOpenMobile(false)
@@ -190,10 +181,19 @@ export function AppSidebar() {
 
   async function handleCopyMcpUrl() {
     try {
-      await navigator.clipboard.writeText(new URL("/mcp", window.location.origin).href)
-      setMcpCopyState("copied")
+      await navigator.clipboard.writeText(mcpUrl)
+      setMcpUrlCopyState("copied")
     } catch {
-      setMcpCopyState("error")
+      setMcpUrlCopyState("error")
+    }
+  }
+
+  async function handleCopyMcpPrompt() {
+    try {
+      await navigator.clipboard.writeText(mcpPrompt)
+      setMcpPromptCopyState("copied")
+    } catch {
+      setMcpPromptCopyState("error")
     }
   }
 
@@ -278,6 +278,96 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="text-xs text-gray-500">
         <SidebarMenu>
+          {!sessionQuery.data || sessionQuery.data.environment === "cloudflare" ? null : (
+            <SidebarMenuItem>
+              <Dialog
+                open={isMcpDialogOpen}
+                onOpenChange={(open) => {
+                  setIsMcpDialogOpen(open)
+                  if (!open) {
+                    setMcpUrlCopyState("idle")
+                    setMcpPromptCopyState("idle")
+                  }
+                }}
+              >
+                <DialogTrigger asChild>
+                  <SidebarMenuButton>
+                    <LucideBot />
+                    <span>Connect your AI</span>
+                  </SidebarMenuButton>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Connect your AI</DialogTitle>
+                  </DialogHeader>
+                  <DialogDescription>
+                    By connecting the MCP server to your AI, it will be able to list, read and write
+                    pages in Skrivla for you. Normally it is enough to use the setup prompt below,
+                    but you can also set it up manually with the MCP URL below if needed.
+                  </DialogDescription>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold tracking-widest uppercase text-muted-foreground">
+                      Setup prompt
+                    </label>
+                    <InputGroup>
+                      <InputGroupInput
+                        readOnly
+                        value={mcpPrompt}
+                        onFocus={(event) => event.target.select()}
+                      />
+                      <InputGroupAddon align="inline-end">
+                        <InputGroupButton onClick={handleCopyMcpPrompt}>
+                          {mcpPromptCopyState === "copied" ? (
+                            <>
+                              <LucideCheck />
+                              Copied
+                            </>
+                          ) : (
+                            "Copy Prompt"
+                          )}
+                        </InputGroupButton>
+                      </InputGroupAddon>
+                    </InputGroup>
+                    {mcpPromptCopyState === "error" && (
+                      <p className="text-sm text-destructive">
+                        Copy failed. You can still copy the prompt manually.
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold tracking-widest uppercase text-muted-foreground">
+                      MCP URL
+                    </label>
+                    <InputGroup>
+                      <InputGroupInput
+                        readOnly
+                        value={mcpUrl}
+                        onFocus={(event) => event.target.select()}
+                      />
+                      <InputGroupAddon align="inline-end">
+                        <InputGroupButton onClick={handleCopyMcpUrl}>
+                          {mcpUrlCopyState === "copied" ? (
+                            <>
+                              <LucideCheck />
+                              Copied
+                            </>
+                          ) : (
+                            "Copy Link"
+                          )}
+                        </InputGroupButton>
+                      </InputGroupAddon>
+                    </InputGroup>
+                    {mcpUrlCopyState === "error" && (
+                      <p className="text-sm text-destructive">
+                        Copy failed. You can still copy the URL manually.
+                      </p>
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </SidebarMenuItem>
+          )}
           {sessionQuery.isPending ? (
             <>
               <SidebarMenuSkeleton showIcon />
@@ -359,21 +449,6 @@ export function AppSidebar() {
                       </a>
                     </DropdownMenuItem>
                   ) : null}
-                  <DropdownMenuItem
-                    onSelect={(event) => {
-                      event.preventDefault()
-                      void handleCopyMcpUrl()
-                    }}
-                  >
-                    {mcpCopyState === "copied" ? <LucideCheck /> : <LucideCopy />}
-                    <span>
-                      {mcpCopyState === "copied"
-                        ? "Copied MCP URL"
-                        : mcpCopyState === "error"
-                          ? "Copy failed"
-                          : "Copy MCP URL"}
-                    </span>
-                  </DropdownMenuItem>
                   {!isDev && user ? <DropdownMenuSeparator /> : null}
                   {!isDev ? (
                     <DropdownMenuItem onSelect={() => void handleLogout()}>
