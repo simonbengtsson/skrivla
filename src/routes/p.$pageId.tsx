@@ -353,10 +353,9 @@ function PageInstanceHeader(props: {
             </DialogHeader>
             <DialogDescription asChild>
               <div className="space-y-2">
-                <p>All pages in Skrivla are public.</p>
                 <p>
-                  Share the the browser url (or click copy url below) of any page to collaborate
-                  with anyone.
+                  Share the the browser page url or link below to collaborate with anyone. Anyone
+                  with the link can read and edit the page.
                 </p>
               </div>
             </DialogDescription>
