@@ -278,7 +278,7 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="text-xs text-gray-500">
         <SidebarMenu>
-          {!sessionQuery.data || sessionQuery.data.environment === "cloudflare" ? null : (
+          {!user || !sessionQuery.data || sessionQuery.data.environment === "cloudflare" ? null : (
             <SidebarMenuItem>
               <Dialog
                 open={isMcpDialogOpen}
