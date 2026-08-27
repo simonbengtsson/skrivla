@@ -1,4 +1,5 @@
 import { env } from "cloudflare:workers"
+import { getSession } from "luvabase/runtime"
 import { DEV_AUTH_ANONYMOUS_VALUE, DEV_AUTH_COOKIE_NAME } from "../core/shared"
 import type { LuvabaseMember } from "../core/types"
 
@@ -40,7 +41,7 @@ export function isAuthenticated(request: Request) {
     return Boolean(selectedDevId) && selectedDevId !== DEV_AUTH_ANONYMOUS_VALUE
   }
 
-  return Boolean(request.headers.get("x-luvabase-user-id"))
+  return getSession(request).isAuthenticated
 }
 
 export function getCurrentUser(request: Request): LuvabaseMember | null {
@@ -66,21 +67,15 @@ export function getCurrentUser(request: Request): LuvabaseMember | null {
     return DEV_MEMBERS[0] ?? null
   }
 
-  const id = request.headers.get("x-luvabase-user-id") || request.headers.get("x-luvabase-actor-id")
-  const name =
-    request.headers.get("x-luvabase-user-name") || request.headers.get("x-luvabase-actor-name")
-
-  if (!id || !name) {
+  const member = getSession(request).member
+  if (!member) {
     return null
   }
 
   return {
-    id,
-    name,
-    imageUrl:
-      request.headers.get("x-luvabase-user-image-url") ||
-      request.headers.get("x-luvabase-actor-image-url") ||
-      null,
+    id: member.id,
+    name: member.name,
+    imageUrl: member.imageUrl,
   }
 }
 

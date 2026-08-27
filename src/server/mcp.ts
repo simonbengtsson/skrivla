@@ -4,7 +4,8 @@ import { toJsonSchemaCompat } from "@modelcontextprotocol/sdk/server/zod-json-sc
 import { z } from "zod/v3"
 import { pageSchema } from "../core/pageDocument"
 import type { Page, PageContent } from "../core/types"
-import { getCurrentUser } from "./luvabase"
+import { getCurrentUser, isAuthenticated } from "./luvabase"
+import { mcpUnauthorizedResponse, type McpOAuthEnv } from "./mcpOAuth"
 
 const JSON_HEADERS = {
   "content-type": "application/json",
@@ -147,6 +148,10 @@ export async function handleMcpRequest(request: Request, env: Cloudflare.Env) {
     return mcpDiscoveryPage(request, env)
   }
 
+  if (request.method === "POST" && !isAuthenticated(request)) {
+    return mcpUnauthorizedResponse(request, env as McpOAuthEnv)
+  }
+
   const server = createMcpServer(request, env)
   const transport = new WebStandardStreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
@@ -223,8 +228,8 @@ function createMcpServer(
         const normalizedQuery = query?.trim().toLocaleLowerCase()
         const matches = normalizedQuery
           ? documents.filter((document) =>
-              `${document.name}\n${document.preview}`.toLocaleLowerCase().includes(normalizedQuery),
-            )
+            `${document.name}\n${document.preview}`.toLocaleLowerCase().includes(normalizedQuery),
+          )
           : documents
 
         return jsonResult({ documents: matches.slice(0, limit) })
@@ -355,10 +360,10 @@ function createMcpServer(
         const editedDocument =
           operations.length > 0
             ? await pageRequest(env, document_id, "mcp/edit", {
-                method: "POST",
-                headers: JSON_HEADERS,
-                body: JSON.stringify({ snapshotId: snapshot_id, operations }),
-              })
+              method: "POST",
+              headers: JSON_HEADERS,
+              body: JSON.stringify({ snapshotId: snapshot_id, operations }),
+            })
             : null
 
         if (!editedDocument) await getPage(env, document_id)
@@ -643,7 +648,8 @@ function mcpCorsHeaders() {
     "access-control-allow-origin": "*",
     "access-control-allow-methods": "GET, POST, DELETE, OPTIONS",
     "access-control-allow-headers":
-      "Content-Type, Accept, Mcp-Session-Id, Mcp-Protocol-Version, Last-Event-ID",
-    "access-control-expose-headers": "Mcp-Session-Id, Mcp-Protocol-Version",
+      "Authorization, Content-Type, Accept, Mcp-Session-Id, Mcp-Protocol-Version, Last-Event-ID",
+    "access-control-expose-headers":
+      "WWW-Authenticate, Mcp-Session-Id, Mcp-Protocol-Version",
   }
 }

@@ -21,6 +21,10 @@ import type { PageContent } from "../core/types"
 import { generateShortId } from "../core/utils"
 import { getCurrentUser, getDevMembers, getEnvironment, isAuthenticated } from "./luvabase"
 import { handleMcpRequest } from "./mcp"
+import {
+  handleOAuthProtectedResourceMetadataRequest,
+  type McpOAuthEnv,
+} from "./mcpOAuth"
 import { migrations } from "./migrations"
 
 const WORKSPACE_DO_NAME = "workspace"
@@ -84,6 +88,13 @@ export default {
 
     if (url.pathname === "/mcp") {
       return handleMcpRequest(request, env)
+    }
+
+    if (
+      url.pathname === "/.well-known/oauth-protected-resource" &&
+      (request.method === "GET" || request.method === "HEAD")
+    ) {
+      return handleOAuthProtectedResourceMetadataRequest(request, env as McpOAuthEnv)
     }
 
     const collaborationMatch = matchPageCollaborationPath(url.pathname)
