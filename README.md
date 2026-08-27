@@ -4,6 +4,7 @@
 
 🌎 Just share a link and instantly write together. No login needed.<br>
 🎨 Rich text editing and Markdown shortcuts.<br>
+🤖 Connect your AI through MCP to find, read and write your pages.<br>
 ❤️ Free forever, open source, self-hostable on Luvabase and Cloudflare.<br>
 
 ![Screenshot of Skrivla](/public/screenshot.png)

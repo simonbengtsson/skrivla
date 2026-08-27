@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { listTrashPages, queryKeys, restorePage } from "@/core/api"
+import { requireAuthenticatedSession } from "@/core/auth"
 import { formatDate } from "@/core/dateUtils"
 import { syncPageCache } from "@/core/pageCache"
 import type { Page } from "@/core/types"
@@ -21,6 +22,7 @@ import { createFileRoute } from "@tanstack/react-router"
 import { HistoryIcon } from "lucide-react"
 
 export const Route = createFileRoute("/trash")({
+  beforeLoad: ({ context }) => requireAuthenticatedSession(context.queryClient),
   component: TrashPage,
 })
 

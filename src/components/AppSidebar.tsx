@@ -540,6 +540,11 @@ const sellingPoints = [
     description: "Share a page link with anyone to edit together. No accounts needed.",
   },
   {
+    icon: "🤖",
+    title: "Connect your AI",
+    description: "Use MCP to let your AI find, read and write your pages.",
+  },
+  {
     icon: "🎨",
     title: "Designed for desktop, mobile and dark mode",
     description: "Works on any device and any system theme.",

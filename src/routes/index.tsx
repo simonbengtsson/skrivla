@@ -3,12 +3,14 @@ import { Button } from "@/components/ui/button"
 import { SidebarInset } from "@/components/ui/sidebar"
 import { Skeleton } from "@/components/ui/skeleton"
 import { createPage } from "@/core/api"
+import { requireAuthenticatedSession } from "@/core/auth"
 import { syncPageCache } from "@/core/pageCache"
 import { useSession } from "@/core/UserContext"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, useRouter } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/")({
+  beforeLoad: ({ context }) => requireAuthenticatedSession(context.queryClient),
   component: App,
 })
 
