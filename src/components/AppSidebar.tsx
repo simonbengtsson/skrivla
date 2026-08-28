@@ -11,7 +11,6 @@ import { cn } from "@/lib/utils"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useRouter, useRouterState } from "@tanstack/react-router"
 import {
-  InfoIcon,
   LucideBot,
   LucideCheck,
   LucideChevronDown,
@@ -278,6 +277,33 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="text-xs text-gray-500">
         <SidebarMenu>
+          {sessionQuery.isPending ? (
+            <>
+              <SidebarMenuSkeleton showIcon />
+              <SidebarMenuSkeleton showIcon />
+              <SidebarMenuItem>
+                <SidebarMenuButton disabled>
+                  <Skeleton className="size-4 rounded-none" />
+                  <Skeleton className="h-4 w-24 rounded-none" />
+                  <Skeleton className="ml-auto size-4 rounded-none" />
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </>
+          ) : user ? (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={() => {
+                  setIsOpenDialogOpen(true)
+                }}
+              >
+                <LucideSearch />
+                <span>Open</span>
+                <span className="ml-auto text-[10px] tracking-widest text-gray-500 uppercase">
+                  ⌘K
+                </span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ) : null}
           {!user || !sessionQuery.data || sessionQuery.data.environment === "cloudflare" ? null : (
             <SidebarMenuItem>
               <Dialog
@@ -369,33 +395,6 @@ export function AppSidebar() {
             </SidebarMenuItem>
           )}
           {sessionQuery.isPending ? (
-            <>
-              <SidebarMenuSkeleton showIcon />
-              <SidebarMenuSkeleton showIcon />
-              <SidebarMenuItem>
-                <SidebarMenuButton disabled>
-                  <Skeleton className="size-4 rounded-none" />
-                  <Skeleton className="h-4 w-24 rounded-none" />
-                  <Skeleton className="ml-auto size-4 rounded-none" />
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </>
-          ) : user ? (
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                onClick={() => {
-                  setIsOpenDialogOpen(true)
-                }}
-              >
-                <LucideSearch />
-                <span>Open</span>
-                <span className="ml-auto text-[10px] tracking-widest text-gray-500 uppercase">
-                  ⌘K
-                </span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ) : null}
-          {sessionQuery.isPending ? (
             <SidebarMenuSkeleton showIcon />
           ) : user ? (
             <SidebarMenuItem>
@@ -407,6 +406,39 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           ) : null}
+          <SidebarMenuItem>
+            <Dialog>
+              <DialogTrigger asChild>
+                <SidebarMenuButton>
+                  <InfoIcon />
+                  <span>About Skrivla</span>
+                </SidebarMenuButton>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>About Skrivla</DialogTitle>
+                </DialogHeader>
+                <DialogDescription asChild>
+                  <div>
+                    Write together with anyone and bring your own AI
+                    <br />
+                    <br />
+                    {sellingPoints.map((point) => (
+                      <div className="flex items-center gap-3 py-3" key={point.title}>
+                        <div style={{ fontFamily: "Noto Color Emoji", fontSize: 25 }}>
+                          {point.icon}
+                        </div>
+                        <div>
+                          <div className="text-lg font-bold">{point.title}</div>
+                          <div>{point.description}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </DialogDescription>
+              </DialogContent>
+            </Dialog>
+          </SidebarMenuItem>
           {!sessionQuery.data || sessionQuery.data.environment === "cloudflare" ? null : (
             <SidebarMenuItem>
               <DropdownMenu>
@@ -460,39 +492,6 @@ export function AppSidebar() {
               </DropdownMenu>
             </SidebarMenuItem>
           )}
-          <SidebarMenuItem>
-            <Dialog>
-              <DialogTrigger asChild>
-                <SidebarMenuButton>
-                  <InfoIcon />
-                  <span>About Skrivla</span>
-                </SidebarMenuButton>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>About Skrivla</DialogTitle>
-                </DialogHeader>
-                <DialogDescription asChild>
-                  <div>
-                    Write together with anyone and bring your own AI
-                    <br />
-                    <br />
-                    {sellingPoints.map((point) => (
-                      <div className="flex items-center gap-3 py-3" key={point.title}>
-                        <div style={{ fontFamily: "Noto Color Emoji", fontSize: 25 }}>
-                          {point.icon}
-                        </div>
-                        <div>
-                          <div className="text-lg font-bold">{point.title}</div>
-                          <div>{point.description}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </DialogDescription>
-              </DialogContent>
-            </Dialog>
-          </SidebarMenuItem>
         </SidebarMenu>
         <CommandDialog
           open={isOpenDialogOpen}
