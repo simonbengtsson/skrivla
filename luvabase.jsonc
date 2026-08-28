@@ -2,10 +2,10 @@
   "$schema": "node_modules/luvabase/manifest-schema.json",
   "identifier": "skrivla",
   "name": "Skrivla",
-  "subtitle": "Collaborative text editor",
+  "subtitle": "Write together with anyone and bring your own AI",
   "icon": "public/apple-icon.png",
   "repository": "https://github.com/simonbengtsson/skrivla",
-  "description": "Skrivla is your self-hostable collaborative document editor. Think Google Docs, but specifically designed for quick brainstorming sessions, meeting notes, and more. Share a page link, and anyone can collaborate on it.",
+  "description": "Skrivla is where people and AI write together. It's like a minimal Google Docs or Notion where you can easily bring your own AI. Perfect for quick brainstorming sessions, feature specs, meeting notes, and more.",
   "surfaces": [
     {
       "type": "web"

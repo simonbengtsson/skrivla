@@ -474,8 +474,7 @@ export function AppSidebar() {
                 </DialogHeader>
                 <DialogDescription asChild>
                   <div>
-                    Skrivla is a minimal collaborative text editor, perfect for quick thoughts,
-                    meeting notes, and collaborative brainstorming.
+                    Write together with anyone and bring your own AI
                     <br />
                     <br />
                     {sellingPoints.map((point) => (

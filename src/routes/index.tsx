@@ -51,8 +51,7 @@ function App() {
                   Skrivla
                 </h1>
                 <p className="sm:text-xl leading-6 text-muted-foreground py-4">
-                  Create a page and share it to collaborate in real time with anyone. No login
-                  needed.
+                  Write together with anyone and bring your own AI
                 </p>
               </div>
               <Button
