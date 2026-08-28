@@ -305,7 +305,7 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           ) : null}
-          {!user || !sessionQuery.data || sessionQuery.data.environment === "cloudflare" ? null : (
+          {!user || sessionQuery.data?.environment !== "luvabase" ? null : (
             <SidebarMenuItem>
               <Dialog
                 open={isMcpDialogOpen}
@@ -540,8 +540,8 @@ const sellingPoints = [
   },
   {
     icon: "🤖",
-    title: "Connect your AI",
-    description: "Use MCP to let your AI find, read, and write your pages.",
+    title: "Bring your own AI",
+    description: "Connect with MCP to let your AI find, read, and write your pages.",
   },
   {
     icon: "🎨",
