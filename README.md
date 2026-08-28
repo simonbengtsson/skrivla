@@ -21,7 +21,7 @@ Skrivla is where people and AI write together. It's like a minimal Google Docs o
 
 The easiest way to use Skrivla is to [install it on Luvabase](https://luvabase.com/apps/skrivla/install). On Luvabase, authentication is managed for you.
 
-You can also [deploy to your own Cloudflare account](https://deploy.workers.cloudflare.com/?url=https://github.com/simonbengtsson/skrivla) and protect your Skrivla instance with [Cloudflare Access](https://developers.cloudflare.com/cloudflare-for-platforms/cloudflare-for-saas/security/secure-with-access).
+You can also [deploy to your own Cloudflare account](https://deploy.workers.cloudflare.com/?url=https://github.com/simonbengtsson/skrivla). When deploying on Cloudflare the instance is entirely public which means that anyone can create and list pages so you likely want to setup Cloudflare Access or similar to protect it.
 
 ## Stack
 

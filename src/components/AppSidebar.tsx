@@ -305,7 +305,7 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           ) : null}
-          {!user || sessionQuery.data?.environment !== "luvabase" ? null : (
+          {!user ? null : (
             <SidebarMenuItem>
               <Dialog
                 open={isMcpDialogOpen}
