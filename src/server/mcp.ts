@@ -12,7 +12,7 @@ const JSON_HEADERS = {
 }
 
 const PROSEMIRROR_INSTRUCTION =
-  'Skrivla content uses ProseMirror JSON and sequential transaction positions. The separate document title is displayed as the document H1, so do not repeat the title as a level-1 heading in the content; start content with body text or a subordinate heading instead. Read a document before editing it. The first operation uses positions from that read_document snapshot; each later operation uses positions in the document produced by all preceding operations in the same list. Block insertions use top-level boundaries, and inline operations use text positions. An empty paragraph is {"type":"paragraph"}.'
+  'Skrivla content uses ProseMirror JSON and sequential transaction positions. The separate document title is displayed as the document H1, so do not repeat the title as a level-1 heading in the content; start content with body text or a subordinate heading instead. Read a document before editing it and pass its edit token to edit_document. The first operation uses positions from the corresponding read_document result; each later operation uses positions in the document produced by all preceding operations in the same list. Block insertions use top-level boundaries, and inline operations use text positions. An empty paragraph is {"type":"paragraph"}.'
 
 const prosemirrorMarkSchema = z.object({
   type: z.string().min(1),
@@ -76,9 +76,9 @@ const pageMetadataSchema = z.object({
   updatedAt: z.string(),
   deletedAt: z.string().nullable(),
 })
-const documentSnapshotSchema = z.object({
+const documentStateSchema = z.object({
   documentId: z.string(),
-  snapshotId: z.string(),
+  editToken: z.string().describe("Opaque token to pass to edit_document"),
   revision: z.string(),
   updatedAt: z.string().nullable(),
   markdown: z.string(),
@@ -244,11 +244,11 @@ function createMcpServer(
     {
       title: "Read a Skrivla document",
       description:
-        "Read a Skrivla document and create a revision-safe editing snapshot. tiptapJson is the current ProseMirror document JSON. Blocks and segments provide positions for the first edit_document operation; later operations use the document produced by preceding operations.",
+        "Read a Skrivla document. tiptapJson is the current ProseMirror document JSON. Pass the returned editToken as edit_document's edit_token. Blocks and segments provide positions for the first edit_document operation; later operations use the document produced by preceding operations.",
       inputSchema: z.object({
         document_id: z.string().min(1),
       }),
-      outputSchema: documentSnapshotSchema.extend({
+      outputSchema: documentStateSchema.extend({
         title: z.string().describe("Document title, displayed as the document H1 above its content"),
         createdAt: z.string(),
       }),
@@ -327,10 +327,10 @@ function createMcpServer(
     "edit_document",
     {
       title: "Edit a Skrivla document",
-      description: `Apply a sequential ProseMirror-style transaction containing insert, replace, delete, mark, and node-markup operations, then merge its Yjs delta. The first operation addresses the read_document snapshot; every later operation addresses the document resulting from preceding operations. To make several independent edits using unchanged snapshot positions, order them from the end of the document toward the beginning. Supported nodes include paragraph, heading (attrs.level 1-6), text, bulletList, orderedList, listItem, blockquote, codeBlock, horizontalRule, and hardBreak. Supported marks include bold, italic, strike, code, underline, and link. ${PROSEMIRROR_INSTRUCTION}`,
+      description: `Apply a sequential ProseMirror-style transaction containing insert, replace, delete, mark, and node-markup operations using the edit token returned by read_document. The first operation addresses the corresponding read_document result; every later operation addresses the document resulting from preceding operations. To make several independent edits using unchanged read positions, order them from the end of the document toward the beginning. Supported nodes include paragraph, heading (attrs.level 1-6), text, bulletList, orderedList, listItem, blockquote, codeBlock, horizontalRule, and hardBreak. Supported marks include bold, italic, strike, code, underline, and link. ${PROSEMIRROR_INSTRUCTION}`,
       inputSchema: z.object({
         document_id: z.string().min(1),
-        snapshot_id: z.string().min(1),
+        edit_token: z.string().min(1).describe("editToken returned by read_document"),
         title: z
           .string()
           .optional()
@@ -342,7 +342,7 @@ function createMcpServer(
       outputSchema: z.object({
         document: pageMetadataSchema,
         appliedOperations: z.number().int().nonnegative(),
-        editingSnapshot: documentSnapshotSchema.nullable(),
+        documentState: documentStateSchema.nullable(),
       }),
       annotations: {
         readOnlyHint: false,
@@ -351,22 +351,22 @@ function createMcpServer(
         openWorldHint: false,
       },
     },
-    async ({ document_id, snapshot_id, title, operations }) => {
+    async ({ document_id, edit_token, title, operations }) => {
       try {
         if (title === undefined && operations.length === 0) {
           throw new Error("Supply a title or at least one edit operation")
         }
 
-        const editedDocument =
+        const documentState =
           operations.length > 0
             ? await pageRequest(env, document_id, "mcp/edit", {
               method: "POST",
               headers: JSON_HEADERS,
-              body: JSON.stringify({ snapshotId: snapshot_id, operations }),
+              body: JSON.stringify({ editToken: edit_token, operations }),
             })
             : null
 
-        if (!editedDocument) await getPage(env, document_id)
+        if (!documentState) await getPage(env, document_id)
 
         const page =
           title === undefined
@@ -376,7 +376,7 @@ function createMcpServer(
         return jsonResult({
           document: page,
           appliedOperations: operations.length,
-          editingSnapshot: editedDocument,
+          documentState,
         })
       } catch (error) {
         return toolError(error)

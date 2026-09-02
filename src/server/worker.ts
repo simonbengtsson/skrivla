@@ -445,10 +445,10 @@ export class PageDO extends DurableObject {
       if (internalMcpMatch.action === "edit" && request.method === "POST") {
         try {
           const body = await readJsonBody<{
-            snapshotId?: string
+            editToken?: string
             operations?: McpEditOperation[]
           }>(request)
-          this.applyMcpEdits(body.snapshotId ?? "", body.operations ?? [])
+          this.applyMcpEdits(body.editToken ?? "", body.operations ?? [])
           return Response.json(this.createMcpSnapshot())
         } catch (error) {
           return Response.json(
@@ -713,7 +713,7 @@ export class PageDO extends DurableObject {
 
     return {
       documentId: this.pageId,
-      snapshotId,
+      editToken: snapshotId,
       revision: encodeStoredDocument(Y.encodeStateVector(this.doc)),
       updatedAt: content?.updatedAt ?? null,
       markdown: serializePageBodyMarkdown(this.doc),
@@ -735,21 +735,21 @@ export class PageDO extends DurableObject {
     }
   }
 
-  private applyMcpEdits(snapshotId: string, operations: McpEditOperation[]) {
-    const snapshotKey = `${MCP_SNAPSHOT_PREFIX}${snapshotId}`
+  private applyMcpEdits(editToken: string, operations: McpEditOperation[]) {
+    const snapshotKey = `${MCP_SNAPSHOT_PREFIX}${editToken}`
     const snapshot = this.ctx.storage.kv.get<McpSnapshot>(snapshotKey)
     if (!snapshot) {
-      throw new Error("Snapshot not found or expired; call read_document again")
+      throw new Error("Edit token not found or expired; call read_document again")
     }
 
     if (Date.now() - Date.parse(snapshot.createdAt) > MCP_SNAPSHOT_MAX_AGE_MS) {
       this.ctx.storage.kv.delete(snapshotKey)
-      throw new Error("Snapshot expired; call read_document again")
+      throw new Error("Edit token expired; call read_document again")
     }
 
     const snapshotUpdate = decodeStoredDocument(snapshot.document)
     if (!snapshotUpdate) {
-      throw new Error("Snapshot is invalid; call read_document again")
+      throw new Error("Edit token is invalid; call read_document again")
     }
 
     const editingDoc = new Y.Doc()
