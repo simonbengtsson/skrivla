@@ -39,3 +39,7 @@ Contributions are very welcome! The goal is to keep the editor minimal, but the 
 - Agent integration in the editor (with Workers AI)
 - A small desktop sync application to sync pages to a local folder for easier access by local agents
 - Folders, tags or page pinning to better support organizing many pages
+
+## License
+
+Skrivla is licensed under the [MIT License](LICENSE).
